@@ -1,0 +1,43 @@
+site_name: ils-reports
+site_description: Data pipeline from Sierra ILS to SQLite for CHPL collection reporting.
+repo_url: https://github.com/cincinnatilibrary/ils-reports
+
+theme:
+  name: material
+  features:
+    - navigation.tabs
+    - navigation.expand
+    - content.code.copy
+  palette:
+    - scheme: default
+      primary: teal
+
+nav:
+  - Home: index.md
+  - Pipeline Architecture: pipeline.md
+  - Configuration: configuration.md
+  - Data Dictionary:
+      - Overview: data_dictionary.md
+      - Base Tables: tables/base_tables.md
+      - Lookup Tables: tables/lookup_tables.md
+      - Link Tables: tables/link_tables.md
+      - Views: tables/views.md
+  - Development: development.md
+
+plugins:
+  - search
+  - mkdocstrings:
+      handlers:
+        python:
+          options:
+            docstring_style: google
+            show_source: true
+
+markdown_extensions:
+  - tables
+  - admonition
+  - pymdownx.superfences
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - toc:
+      permalink: true
