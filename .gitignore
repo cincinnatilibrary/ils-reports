@@ -28,3 +28,6 @@ logs/
 
 # OS
 .DS_Store
+
+# Rust build artifacts
+reference/**/target/
