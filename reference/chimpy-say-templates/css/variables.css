@@ -1,0 +1,229 @@
+/**
+ * CHPL Design System - CSS Variables
+ * Brand-compliant color palette with dark/light mode support
+ */
+
+:root {
+  /* ========================================
+     BRAND COLORS (from CHPL Brand Guidelines)
+     ======================================== */
+
+  /* Primary */
+  --chpl-navy: #16243a;
+  --chpl-cream: #F6F1EB;
+
+  /* Secondary Palette */
+  --chpl-blue: #0092BD;
+  --chpl-green: #34B78F;
+  --chpl-purple: #8659B5;
+  --chpl-yellow: #FFB81C;
+  --chpl-coral: #E56A54;
+
+  /* Extended/Utility Colors */
+  --chpl-navy-light: #2a3d5a;
+  --chpl-navy-lighter: #3d5478;
+  --chpl-cream-dark: #e8dfd5;
+  --chpl-cream-darker: #d5c9bb;
+
+  /* ========================================
+     SEMANTIC TOKENS - Light Mode (default)
+     ======================================== */
+
+  /* Backgrounds */
+  --bg-primary: var(--chpl-cream);
+  --bg-secondary: #ffffff;
+  --bg-tertiary: var(--chpl-cream-dark);
+  --bg-inverse: var(--chpl-navy);
+  --bg-elevated: #ffffff;
+  --bg-sunken: #f0ebe5;
+
+  /* Text */
+  --text-primary: var(--chpl-navy);
+  --text-secondary: #4a5568;
+  --text-muted: #718096;
+  --text-inverse: var(--chpl-cream);
+  --text-link: var(--chpl-blue);
+  --text-link-hover: #007a9e;
+
+  /* Borders */
+  --border-light: rgba(22, 36, 58, 0.1);
+  --border-medium: rgba(22, 36, 58, 0.2);
+  --border-heavy: rgba(22, 36, 58, 0.3);
+  --border-focus: var(--chpl-blue);
+
+  /* Status Colors */
+  --status-success: var(--chpl-green);
+  --status-success-bg: rgba(52, 183, 143, 0.1);
+  --status-warning: var(--chpl-yellow);
+  --status-warning-bg: rgba(255, 184, 28, 0.1);
+  --status-error: var(--chpl-coral);
+  --status-error-bg: rgba(229, 106, 84, 0.1);
+  --status-info: var(--chpl-blue);
+  --status-info-bg: rgba(0, 146, 189, 0.1);
+
+  /* Data Visualization Palette */
+  --chart-1: var(--chpl-blue);
+  --chart-2: var(--chpl-green);
+  --chart-3: var(--chpl-purple);
+  --chart-4: var(--chpl-yellow);
+  --chart-5: var(--chpl-coral);
+  --chart-6: var(--chpl-navy);
+
+  /* Shadows */
+  --shadow-sm: 0 1px 2px rgba(22, 36, 58, 0.05);
+  --shadow-md: 0 4px 6px rgba(22, 36, 58, 0.07), 0 2px 4px rgba(22, 36, 58, 0.06);
+  --shadow-lg: 0 10px 15px rgba(22, 36, 58, 0.1), 0 4px 6px rgba(22, 36, 58, 0.05);
+  --shadow-xl: 0 20px 25px rgba(22, 36, 58, 0.1), 0 10px 10px rgba(22, 36, 58, 0.04);
+
+  /* ========================================
+     TYPOGRAPHY
+     ======================================== */
+
+  /* Font Families (BrownStd with fallbacks per brand guide) */
+  --font-sans: "BrownStd", "Arial", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-mono: "SF Mono", "Monaco", "Inconsolata", "Fira Mono", "Droid Sans Mono", monospace;
+
+  /* Font Sizes */
+  --text-xs: 0.75rem;    /* 12px */
+  --text-sm: 0.875rem;   /* 14px */
+  --text-base: 1rem;     /* 16px */
+  --text-lg: 1.125rem;   /* 18px */
+  --text-xl: 1.25rem;    /* 20px */
+  --text-2xl: 1.5rem;    /* 24px */
+  --text-3xl: 1.875rem;  /* 30px */
+  --text-4xl: 2.25rem;   /* 36px */
+
+  /* Line Heights */
+  --leading-tight: 1.25;
+  --leading-normal: 1.5;
+  --leading-relaxed: 1.625;
+
+  /* Font Weights */
+  --font-normal: 400;
+  --font-medium: 500;
+  --font-semibold: 600;
+  --font-bold: 700;
+
+  /* ========================================
+     SPACING
+     ======================================== */
+  --space-1: 0.25rem;   /* 4px */
+  --space-2: 0.5rem;    /* 8px */
+  --space-3: 0.75rem;   /* 12px */
+  --space-4: 1rem;      /* 16px */
+  --space-5: 1.25rem;   /* 20px */
+  --space-6: 1.5rem;    /* 24px */
+  --space-8: 2rem;      /* 32px */
+  --space-10: 2.5rem;   /* 40px */
+  --space-12: 3rem;     /* 48px */
+  --space-16: 4rem;     /* 64px */
+
+  /* ========================================
+     LAYOUT
+     ======================================== */
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+  --radius-full: 9999px;
+
+  --container-sm: 640px;
+  --container-md: 768px;
+  --container-lg: 1024px;
+  --container-xl: 1280px;
+
+  /* ========================================
+     TRANSITIONS
+     ======================================== */
+  --transition-fast: 150ms ease;
+  --transition-normal: 250ms ease;
+  --transition-slow: 350ms ease;
+}
+
+/* ========================================
+   DARK MODE
+   ======================================== */
+
+[data-theme="dark"],
+.dark {
+  /* Backgrounds */
+  --bg-primary: var(--chpl-navy);
+  --bg-secondary: #1e2d47;
+  --bg-tertiary: #2a3d5a;
+  --bg-inverse: var(--chpl-cream);
+  --bg-elevated: #253550;
+  --bg-sunken: #0f1829;
+
+  /* Text */
+  --text-primary: var(--chpl-cream);
+  --text-secondary: #b8c5d6;
+  --text-muted: #8a9bb3;
+  --text-inverse: var(--chpl-navy);
+  --text-link: #3cb8dd;
+  --text-link-hover: #5cc9e8;
+
+  /* Borders */
+  --border-light: rgba(246, 241, 235, 0.1);
+  --border-medium: rgba(246, 241, 235, 0.2);
+  --border-heavy: rgba(246, 241, 235, 0.3);
+  --border-focus: #3cb8dd;
+
+  /* Status Colors (slightly adjusted for dark mode visibility) */
+  --status-success: #4fd4a4;
+  --status-success-bg: rgba(52, 183, 143, 0.2);
+  --status-warning: #ffc94d;
+  --status-warning-bg: rgba(255, 184, 28, 0.2);
+  --status-error: #f08676;
+  --status-error-bg: rgba(229, 106, 84, 0.2);
+  --status-info: #3cb8dd;
+  --status-info-bg: rgba(0, 146, 189, 0.2);
+
+  /* Shadows (more pronounced in dark mode) */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.2);
+  --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.25), 0 2px 4px rgba(0, 0, 0, 0.2);
+  --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.3), 0 4px 6px rgba(0, 0, 0, 0.2);
+  --shadow-xl: 0 20px 25px rgba(0, 0, 0, 0.35), 0 10px 10px rgba(0, 0, 0, 0.15);
+}
+
+/* System preference detection (when no explicit theme set) */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]):not(.light) {
+    /* Backgrounds */
+    --bg-primary: var(--chpl-navy);
+    --bg-secondary: #1e2d47;
+    --bg-tertiary: #2a3d5a;
+    --bg-inverse: var(--chpl-cream);
+    --bg-elevated: #253550;
+    --bg-sunken: #0f1829;
+
+    /* Text */
+    --text-primary: var(--chpl-cream);
+    --text-secondary: #b8c5d6;
+    --text-muted: #8a9bb3;
+    --text-inverse: var(--chpl-navy);
+    --text-link: #3cb8dd;
+    --text-link-hover: #5cc9e8;
+
+    /* Borders */
+    --border-light: rgba(246, 241, 235, 0.1);
+    --border-medium: rgba(246, 241, 235, 0.2);
+    --border-heavy: rgba(246, 241, 235, 0.3);
+    --border-focus: #3cb8dd;
+
+    /* Status Colors */
+    --status-success: #4fd4a4;
+    --status-success-bg: rgba(52, 183, 143, 0.2);
+    --status-warning: #ffc94d;
+    --status-warning-bg: rgba(255, 184, 28, 0.2);
+    --status-error: #f08676;
+    --status-error-bg: rgba(229, 106, 84, 0.2);
+    --status-info: #3cb8dd;
+    --status-info-bg: rgba(0, 146, 189, 0.2);
+
+    /* Shadows */
+    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.2);
+    --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.25), 0 2px 4px rgba(0, 0, 0, 0.2);
+    --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.3), 0 4px 6px rgba(0, 0, 0, 0.2);
+    --shadow-xl: 0 20px 25px rgba(0, 0, 0, 0.35), 0 10px 10px rgba(0, 0, 0, 0.15);
+  }
+}

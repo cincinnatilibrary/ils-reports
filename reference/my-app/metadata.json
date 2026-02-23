@@ -1,0 +1,11 @@
+{
+  "title": "CHPL Collection 📚 & Branch Explorer 🗺️",
+  "extra_css_urls": [
+    "/static/my.css"
+  ],
+  "plugins": {
+    "datasette-block-robots": {
+      "allow_only_index": true
+    }
+  }
+}

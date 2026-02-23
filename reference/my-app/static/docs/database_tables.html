@@ -1,0 +1,801 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Database Tables, Columns, and Definitions &mdash; collection-analysis  documentation</title>
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/sphinx_highlight.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Static SQL Queries &amp; Reports" href="static_queries.html" />
+    <link rel="prev" title="collection-analysis documentation &amp; resources" href="index.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: white" >
+
+          
+          
+          <a href="index.html">
+            
+              <img src="_static/logo.png" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Database Tables, Columns, and Definitions</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#bib-table-item-table-relationship"><strong>bib</strong> Table, <strong>item</strong> Table Relationship</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#bib-table"><strong>bib</strong> Table</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#item-table"><strong>item</strong> Table</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#bib-record-table"><strong>bib_record</strong> Table</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#item-status-property-myuser-table"><strong>item_status_property_myuser</strong> Table</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#itype-property-myuser-table"><strong>itype_property_myuser</strong> Table</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#physical-format-myuser-table"><strong>physical_format_myuser</strong> Table</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#country-property-myuser-table"><strong>country_property_myuser</strong> Table</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#language-property-table"><strong>language_property</strong> Table</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#record-metadata-table"><strong>record_metadata</strong> Table</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#bib-record-item-record-link-table"><strong>bib_record_item_record_link</strong> Table</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#location-table-location-name-table-branch-table-branch-name-table-relationship"><strong>location</strong> Table, <strong>location_name</strong> Table, <strong>branch</strong> Table, <strong>branch_name</strong> Table Relationship</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#location-table"><strong>location</strong> Table</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#location-name-table"><strong>location_name</strong> Table</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#branch-table"><strong>branch</strong> Table</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#branch-name-table"><strong>branch_name</strong> Table</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#phrase-entry-table"><strong>phrase_entry</strong> Table</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="static_queries.html">Static SQL Queries &amp; Reports</a></li>
+<li class="toctree-l1"><a class="reference internal" href="static_queries_holds.html">Static SQL Queries &amp; Reports: Holds</a></li>
+<li class="toctree-l1"><a class="reference internal" href="misc.html">Miscellaneous Links &amp; Information</a></li>
+<li class="toctree-l1"><a class="reference internal" href="examples.html">Examples and Uses</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: white" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">collection-analysis</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Database Tables, Columns, and Definitions</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/database_tables.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul><div class="rst-breadcrumbs-buttons" role="navigation" aria-label="Sequential page navigation">
+        <a href="index.html" class="btn btn-neutral float-left" title="collection-analysis documentation &amp; resources" accesskey="p"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="static_queries.html" class="btn btn-neutral float-right" title="Static SQL Queries &amp; Reports" accesskey="n">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+  </div>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="database-tables-columns-and-definitions">
+<h1><a class="toc-backref" href="#id1" role="doc-backlink">Database Tables, Columns, and Definitions</a><a class="headerlink" href="#database-tables-columns-and-definitions" title="Permalink to this heading"></a></h1>
+<nav class="contents" id="contents">
+<p class="topic-title">Contents</p>
+<ul class="simple">
+<li><p><a class="reference internal" href="#database-tables-columns-and-definitions" id="id1">Database Tables, Columns, and Definitions</a></p>
+<ul>
+<li><p><a class="reference internal" href="#bib-table-item-table-relationship" id="id2"><strong>bib</strong> Table, <strong>item</strong> Table Relationship</a></p></li>
+<li><p><a class="reference internal" href="#bib-table" id="id3"><strong>bib</strong> Table</a></p></li>
+<li><p><a class="reference internal" href="#item-table" id="id4"><strong>item</strong> Table</a></p></li>
+<li><p><a class="reference internal" href="#bib-record-table" id="id5"><strong>bib_record</strong> Table</a></p></li>
+<li><p><a class="reference internal" href="#item-status-property-myuser-table" id="id6"><strong>item_status_property_myuser</strong> Table</a></p></li>
+<li><p><a class="reference internal" href="#itype-property-myuser-table" id="id7"><strong>itype_property_myuser</strong> Table</a></p></li>
+<li><p><a class="reference internal" href="#physical-format-myuser-table" id="id8"><strong>physical_format_myuser</strong> Table</a></p></li>
+<li><p><a class="reference internal" href="#country-property-myuser-table" id="id9"><strong>country_property_myuser</strong> Table</a></p></li>
+<li><p><a class="reference internal" href="#language-property-table" id="id10"><strong>language_property</strong> Table</a></p></li>
+<li><p><a class="reference internal" href="#record-metadata-table" id="id11"><strong>record_metadata</strong> Table</a></p></li>
+<li><p><a class="reference internal" href="#bib-record-item-record-link-table" id="id12"><strong>bib_record_item_record_link</strong> Table</a></p></li>
+<li><p><a class="reference internal" href="#location-table-location-name-table-branch-table-branch-name-table-relationship" id="id13"><strong>location</strong> Table, <strong>location_name</strong> Table, <strong>branch</strong> Table, <strong>branch_name</strong> Table Relationship</a></p></li>
+<li><p><a class="reference internal" href="#location-table" id="id14"><strong>location</strong> Table</a></p></li>
+<li><p><a class="reference internal" href="#location-name-table" id="id15"><strong>location_name</strong> Table</a></p></li>
+<li><p><a class="reference internal" href="#branch-table" id="id16"><strong>branch</strong> Table</a></p></li>
+<li><p><a class="reference internal" href="#branch-name-table" id="id17"><strong>branch_name</strong> Table</a></p></li>
+<li><p><a class="reference internal" href="#phrase-entry-table" id="id18"><strong>phrase_entry</strong> Table</a></p></li>
+</ul>
+</li>
+</ul>
+</nav>
+<p>The following are tables contained in each of the database snapshots.</p>
+<p>The two primary tables are <code class="docutils literal notranslate"><span class="pre">bib</span></code> (representing <em>title</em> metadata–<code class="docutils literal notranslate"><span class="pre">best_author</span></code> and
+<code class="docutils literal notranslate"><span class="pre">best_title</span></code> for example) and <code class="docutils literal notranslate"><span class="pre">item</span></code> (representing <em>item</em> metadata–<code class="docutils literal notranslate"><span class="pre">barcode</span></code> and
+<code class="docutils literal notranslate"><span class="pre">price_cents</span></code> for example)</p>
+<section id="bib-table-item-table-relationship">
+<h2><a class="toc-backref" href="#id2" role="doc-backlink"><strong>bib</strong> Table, <strong>item</strong> Table Relationship</a><a class="headerlink" href="#bib-table-item-table-relationship" title="Permalink to this heading"></a></h2>
+<p>The <strong>bib</strong> Table and <strong>item</strong> Table are linked via the <strong>bib_record_num</strong> foreign key value, in a <em>one-to-many</em> relationship</p>
+<p>The following SQL, for example, shows how you can count the number of items (<strong>item_record_num</strong>) associated with the selected <strong>bib_record_num</strong></p>
+<div class="highlight-sql notranslate"><div class="highlight"><pre><span></span><span class="k">select</span>
+<span class="w">  </span><span class="n">bib</span><span class="p">.</span><span class="n">bib_record_num</span><span class="p">,</span>
+<span class="w">  </span><span class="p">(</span>
+<span class="w">    </span><span class="k">select</span>
+<span class="w">      </span><span class="k">count</span><span class="p">(</span><span class="n">item</span><span class="p">.</span><span class="n">item_record_num</span><span class="p">)</span>
+<span class="w">    </span><span class="k">from</span>
+<span class="w">      </span><span class="n">item</span>
+<span class="w">    </span><span class="k">where</span>
+<span class="w">      </span><span class="n">item</span><span class="p">.</span><span class="n">bib_record_num</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">bib</span><span class="p">.</span><span class="n">bib_record_num</span>
+<span class="w">  </span><span class="p">)</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="n">count_attached_items</span>
+<span class="k">from</span>
+<span class="w">  </span><span class="n">bib</span>
+<span class="k">limit</span>
+<span class="w">  </span><span class="mi">100</span>
+</pre></div>
+</div>
+</section>
+<section id="bib-table">
+<h2><a class="toc-backref" href="#id3" role="doc-backlink"><strong>bib</strong> Table</a><a class="headerlink" href="#bib-table" title="Permalink to this heading"></a></h2>
+<p>Data in the <code class="docutils literal notranslate"><span class="pre">bib</span></code> table provides information about a resource’s metadata as described below:</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>column name</p></th>
+<th class="head"><p>description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>bib_record_num</p></td>
+<td><p>foreign key to <code class="docutils literal notranslate"><span class="pre">record_metadata.record_num</span></code> value associated with bib record</p></td>
+</tr>
+<tr class="row-odd"><td><p>creation_date</p></td>
+<td><p>ISO 8601 formatted date (YYYY-MM-DD) that the resource</p>
+<p>was created in the CHPL catalog system</p>
+</td>
+</tr>
+<tr class="row-even"><td><p>record_last_updated</p></td>
+<td><p>ISO 8601 formatted date (YYYY-MM-DD) that the resource was last changed</p></td>
+</tr>
+<tr class="row-odd"><td><p>isbn</p></td>
+<td><p>International Standard Book Number (if available)
+associated with the resource</p></td>
+</tr>
+<tr class="row-even"><td><p>best_author</p></td>
+<td><p>The primary author (if available) associated with the resource</p></td>
+</tr>
+<tr class="row-odd"><td><p>best_title</p></td>
+<td><p>The primary title associated with the resource</p></td>
+</tr>
+<tr class="row-even"><td><p>publisher</p></td>
+<td><p>Company or person associated with publishing the resource</p></td>
+</tr>
+<tr class="row-odd"><td><p>publish_year</p></td>
+<td><p>The year of publication associated with the resource</p></td>
+</tr>
+<tr class="row-even"><td><p>bib_level_callnumber</p></td>
+<td><p>The library classification call number associated with the</p>
+<p>resource (this may be different than the item call number)</p>
+</td>
+</tr>
+<tr class="row-odd"><td><p>indexed_subjects</p></td>
+<td><p>Subject headings, subject terms, index terms, or descriptors associated</p>
+<p>with the resource</p>
+</td>
+</tr>
+</tbody>
+</table>
+<p><a class="reference external" href="https://ilsweb.cincinnatilibrary.org/collection-analysis/current_collection/bib">Browse the current_collection bib table</a></p>
+</section>
+<section id="item-table">
+<h2><a class="toc-backref" href="#id4" role="doc-backlink"><strong>item</strong> Table</a><a class="headerlink" href="#item-table" title="Permalink to this heading"></a></h2>
+<p>Data in the <code class="docutils literal notranslate"><span class="pre">item</span></code> table provides information about a resource’s metadata as described below:</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>column name</p></th>
+<th class="head"><p>description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>item_record_num</p></td>
+<td><p>foreign key to <code class="docutils literal notranslate"><span class="pre">record_metadata.record_num</span></code> value associated</p>
+<p>with item record</p>
+</td>
+</tr>
+<tr class="row-odd"><td><p>bib_record_num</p></td>
+<td><p>foreign key to <code class="docutils literal notranslate"><span class="pre">record_metadata.record_num</span></code> value associated</p>
+<p>with bib record</p>
+</td>
+</tr>
+<tr class="row-even"><td><p>creation_date</p></td>
+<td><p>ISO 8601 formatted date (YYYY-MM-DD) that the resource</p>
+<p>was created in the CHPL catalog system</p>
+</td>
+</tr>
+<tr class="row-odd"><td><p>record_last_updated</p></td>
+<td><p>ISO 8601 formatted date (YYYY-MM-DD) that the resource</p>
+<p>was last changed</p>
+</td>
+</tr>
+<tr class="row-even"><td><p>barcode</p></td>
+<td><p>Machine-readable ID that is affixed or kept with the</p>
+<p>physical material</p>
+</td>
+</tr>
+<tr class="row-odd"><td><p>agency_code_num</p></td>
+<td><p>Owning / original agency associated with the item</p></td>
+</tr>
+<tr class="row-even"><td><p>location_code</p></td>
+<td><p>Physical location of the item</p></td>
+</tr>
+<tr class="row-odd"><td><p>checkout_statistic_group_code_num</p></td>
+<td><p>Last assigned statistical code–assigned by a specific terminal /</p>
+<p>location at the last checkout transaction</p>
+</td>
+</tr>
+<tr class="row-even"><td><p>checkin_statistics_group_code_num</p></td>
+<td><p>Last assigned statistical code–assigned by a specific terminal /</p>
+<p>location at the last check in transaction</p>
+</td>
+</tr>
+<tr class="row-odd"><td><p>checkout_date</p></td>
+<td><p>If the item was checked out at the time of the snapshot, this</p>
+<p>value will represent the ISO 8601 formatted (YYYY-MM-DD)</p>
+<p>check out date</p>
+</td>
+</tr>
+<tr class="row-even"><td><p>due_date</p></td>
+<td><p>If the item was checked out at the time of the snapshot, this</p>
+<p>value will represent the ISO 8601 formatted (YYYY-MM-DD)</p>
+<p>due date of the item, otherwise the value is NULL</p>
+</td>
+</tr>
+<tr class="row-odd"><td><p>patron_branch_code</p></td>
+<td><p>If the item was checked out at the time of the snapshot, this</p>
+<p>value will represent the “home library” code for the patron,</p>
+<p>otherwise the value is NULL</p>
+</td>
+</tr>
+<tr class="row-even"><td><p>last_checkout_date</p></td>
+<td><p>ISO 8601 formatted date (YYYY-MM-DD) that the resource</p>
+<p>was last checked out (if the item is currently checked out,</p>
+<p>this will represent the previous checkout date)</p>
+</td>
+</tr>
+<tr class="row-odd"><td><p>last_checkin_date</p></td>
+<td><p>ISO 8601 formatted date (YYYY-MM-DD) that the resource</p>
+<p>was last checked in</p>
+</td>
+</tr>
+<tr class="row-even"><td><p>checkout_total</p></td>
+<td><p>Total count of check out transactions associated with the item</p></td>
+</tr>
+<tr class="row-odd"><td><p>renewal_total</p></td>
+<td><p>Total count of renewal transactions associated with the item</p></td>
+</tr>
+<tr class="row-even"><td><p>isbn</p></td>
+<td><p>International Standard Book Number (if available) associated</p>
+<p>with the resource</p>
+</td>
+</tr>
+<tr class="row-odd"><td><p>item_format</p></td>
+<td><p>Controlled-vocabulary description of the type of item</p></td>
+</tr>
+<tr class="row-even"><td><p>item_status_code</p></td>
+<td><p>Code representing a controlled-vocabulary description of the</p>
+<p>status of the item</p>
+</td>
+</tr>
+<tr class="row-odd"><td><p>price_cents</p></td>
+<td><p>Assigned value of the item in USD (represented as an integer</p>
+<p>value in cents)</p>
+</td>
+</tr>
+<tr class="row-even"><td><p>item_callnumber</p></td>
+<td><p>The library classification call number associated with the</p>
+<p>resource</p>
+</td>
+</tr>
+</tbody>
+</table>
+<p><a class="reference external" href="https://ilsweb.cincinnatilibrary.org/collection-analysis/current_collection/item">Browse the current_collection item table</a></p>
+</section>
+<section id="bib-record-table">
+<h2><a class="toc-backref" href="#id5" role="doc-backlink"><strong>bib_record</strong> Table</a><a class="headerlink" href="#bib-record-table" title="Permalink to this heading"></a></h2>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>column name</p></th>
+<th class="head"><p>description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>id</p></td>
+<td><p>primary key for row</p></td>
+</tr>
+<tr class="row-odd"><td><p>record_id</p></td>
+<td><p>foreign key to <code class="docutils literal notranslate"><span class="pre">record_metadata</span></code> table</p></td>
+</tr>
+<tr class="row-even"><td><p>language_code</p></td>
+<td><p>code as defined in <code class="docutils literal notranslate"><span class="pre">language_property</span></code> table</p></td>
+</tr>
+<tr class="row-odd"><td><p>bcode1</p></td>
+<td><p>fixed field “Bib Level” code as defined in <code class="docutils literal notranslate"><span class="pre">bib_level_property_myuser</span></code> table</p></td>
+</tr>
+<tr class="row-even"><td><p>bcode2</p></td>
+<td><p>fixed field: “Format (Mat Type)” code as defined in</p>
+<p><code class="docutils literal notranslate"><span class="pre">material_property_myuser</span></code> table</p>
+</td>
+</tr>
+<tr class="row-odd"><td><p>bcode3</p></td>
+<td><p>fixed field: “Suppress”. Possible codes are the following:</p>
+<p><code class="docutils literal notranslate"><span class="pre">-</span></code>: —,</p>
+<p><code class="docutils literal notranslate"><span class="pre">d</span></code>: DELETE CODE,</p>
+<p><code class="docutils literal notranslate"><span class="pre">n</span></code>: SUPPRESS,</p>
+<p><code class="docutils literal notranslate"><span class="pre">c</span></code>: SUPPRESS ORD,</p>
+<p><code class="docutils literal notranslate"><span class="pre">s</span></code>: SYMPHONY SUPPRESS</p>
+</td>
+</tr>
+<tr class="row-even"><td><p>country_code</p></td>
+<td><p>code as defined in <code class="docutils literal notranslate"><span class="pre">country_property_myuser</span></code> table</p></td>
+</tr>
+<tr class="row-odd"><td><p>index_change_count</p></td>
+<td><p>count changes to index</p></td>
+</tr>
+<tr class="row-even"><td><p>is_on_course_reserve</p></td>
+<td><p>N/A</p></td>
+</tr>
+<tr class="row-odd"><td><p>is_right_result_exact</p></td>
+<td><p>N/A</p></td>
+</tr>
+<tr class="row-even"><td><p>allocation_rule_code</p></td>
+<td><p>N/A</p></td>
+</tr>
+<tr class="row-odd"><td><p>skip_num</p></td>
+<td><p>ignored characters at start of <code class="docutils literal notranslate"><span class="pre">best_title</span></code> column in <code class="docutils literal notranslate"><span class="pre">bib</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p>cataloging_date_gmt</p></td>
+<td><p>ISO 8601 formatted date (YYYY-MM-DD) that the resource</p>
+<p>was made available to the public access catalog</p>
+</td>
+</tr>
+<tr class="row-odd"><td><p>marc_type_code</p></td>
+<td><p>N/A</p></td>
+</tr>
+<tr class="row-even"><td><p>is_suppressed</p></td>
+<td><p>boolean value indicating if a bib is is_suppressed to the</p>
+<p>public access catalog</p>
+</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="item-status-property-myuser-table">
+<h2><a class="toc-backref" href="#id6" role="doc-backlink"><strong>item_status_property_myuser</strong> Table</a><a class="headerlink" href="#item-status-property-myuser-table" title="Permalink to this heading"></a></h2>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>column name</p></th>
+<th class="head"><p>description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>code</p></td>
+<td><p>item status code</p></td>
+</tr>
+<tr class="row-odd"><td><p>display_order</p></td>
+<td><p>display order</p></td>
+</tr>
+<tr class="row-even"><td><p>name</p></td>
+<td><p>full item status name</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="itype-property-myuser-table">
+<h2><a class="toc-backref" href="#id7" role="doc-backlink"><strong>itype_property_myuser</strong> Table</a><a class="headerlink" href="#itype-property-myuser-table" title="Permalink to this heading"></a></h2>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>column name</p></th>
+<th class="head"><p>description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>code</p></td>
+<td><p>itype code</p></td>
+</tr>
+<tr class="row-odd"><td><p>display_order</p></td>
+<td><p>display order</p></td>
+</tr>
+<tr class="row-even"><td><p>itype_property_category_id</p></td>
+<td><p>N/A</p></td>
+</tr>
+<tr class="row-odd"><td><p>physical_format_id</p></td>
+<td><p>foreign key to physical_format</p></td>
+</tr>
+<tr class="row-even"><td><p>target_audience_id</p></td>
+<td><p>N/A</p></td>
+</tr>
+<tr class="row-odd"><td><p>name</p></td>
+<td><p>full itype name</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="physical-format-myuser-table">
+<h2><a class="toc-backref" href="#id8" role="doc-backlink"><strong>physical_format_myuser</strong> Table</a><a class="headerlink" href="#physical-format-myuser-table" title="Permalink to this heading"></a></h2>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>column name</p></th>
+<th class="head"><p>description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>id</p></td>
+<td><p>primary key for <code class="docutils literal notranslate"><span class="pre">physical_format</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p>is_default</p></td>
+<td><p>N/A</p></td>
+</tr>
+<tr class="row-even"><td><p>display_order</p></td>
+<td><p>display order</p></td>
+</tr>
+<tr class="row-odd"><td><p>name</p></td>
+<td><p>full physical format name</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="country-property-myuser-table">
+<h2><a class="toc-backref" href="#id9" role="doc-backlink"><strong>country_property_myuser</strong> Table</a><a class="headerlink" href="#country-property-myuser-table" title="Permalink to this heading"></a></h2>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>column name</p></th>
+<th class="head"><p>description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>code</p></td>
+<td><p>county code</p></td>
+</tr>
+<tr class="row-odd"><td><p>display_order</p></td>
+<td><p>display order</p></td>
+</tr>
+<tr class="row-even"><td><p>name</p></td>
+<td><p>full country name</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="language-property-table">
+<h2><a class="toc-backref" href="#id10" role="doc-backlink"><strong>language_property</strong> Table</a><a class="headerlink" href="#language-property-table" title="Permalink to this heading"></a></h2>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>column name</p></th>
+<th class="head"><p>description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>id</p></td>
+<td><p>primary key for row</p></td>
+</tr>
+<tr class="row-odd"><td><p>code</p></td>
+<td><p>language code</p></td>
+</tr>
+<tr class="row-even"><td><p>display_order</p></td>
+<td><p>display order</p></td>
+</tr>
+<tr class="row-odd"><td><p>name</p></td>
+<td><p>full language name</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="record-metadata-table">
+<h2><a class="toc-backref" href="#id11" role="doc-backlink"><strong>record_metadata</strong> Table</a><a class="headerlink" href="#record-metadata-table" title="Permalink to this heading"></a></h2>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>column name</p></th>
+<th class="head"><p>description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>id</p></td>
+<td><p>primary key for record</p></td>
+</tr>
+<tr class="row-odd"><td><p>record_type_code</p></td>
+<td><p>code indicating the type of record. Possible codes are the following:</p>
+<p><code class="docutils literal notranslate"><span class="pre">b</span></code>: bibliographic</p>
+<p><code class="docutils literal notranslate"><span class="pre">i</span></code>: item</p>
+<p><code class="docutils literal notranslate"><span class="pre">j</span></code>: volume</p>
+</td>
+</tr>
+<tr class="row-even"><td><p>record_num</p></td>
+<td><p>primary key for record number</p></td>
+</tr>
+<tr class="row-odd"><td><p>creation_date_gmt</p></td>
+<td><p>ISO 8601 formatted date (YYYY-MM-DD) that the record</p>
+<p>was created</p>
+</td>
+</tr>
+<tr class="row-even"><td><p>deletion_date_gmt</p></td>
+<td><p>ISO 8601 formatted date (YYYY-MM-DD) that the record</p>
+<p>was deleted</p>
+</td>
+</tr>
+<tr class="row-odd"><td><p>campus_code</p></td>
+<td><p>campus code (blank indicating the record is not virtual)</p></td>
+</tr>
+<tr class="row-even"><td><p>agency_code_num</p></td>
+<td><p>N/A</p></td>
+</tr>
+<tr class="row-odd"><td><p>record_last_updated_gmt</p></td>
+<td><p>ISO 8601 formatted date (YYYY-MM-DD) that the record</p>
+<p>was last updated</p>
+</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="bib-record-item-record-link-table">
+<h2><a class="toc-backref" href="#id12" role="doc-backlink"><strong>bib_record_item_record_link</strong> Table</a><a class="headerlink" href="#bib-record-item-record-link-table" title="Permalink to this heading"></a></h2>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>column name</p></th>
+<th class="head"><p>description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>id</p></td>
+<td><p>primary key for row</p></td>
+</tr>
+<tr class="row-odd"><td><p>bib_record_id</p></td>
+<td><p>foreign key to <code class="docutils literal notranslate"><span class="pre">record_metadata</span></code> table</p></td>
+</tr>
+<tr class="row-even"><td><p>item_record_id</p></td>
+<td><p>foreign key to <code class="docutils literal notranslate"><span class="pre">record_metadata</span></code> table</p></td>
+</tr>
+<tr class="row-odd"><td><p>items_display_order</p></td>
+<td><p>multiple items attached to bib will have this order</p></td>
+</tr>
+<tr class="row-even"><td><p>bibs_display_order</p></td>
+<td><p>N/A</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<hr class="docutils" />
+<section id="location-table-location-name-table-branch-table-branch-name-table-relationship">
+<h2><a class="toc-backref" href="#id13" role="doc-backlink"><strong>location</strong> Table, <strong>location_name</strong> Table, <strong>branch</strong> Table, <strong>branch_name</strong> Table Relationship</a><a class="headerlink" href="#location-table-location-name-table-branch-table-branch-name-table-relationship" title="Permalink to this heading"></a></h2>
+<p>This SQL example shows the relationship between tables <code class="docutils literal notranslate"><span class="pre">location</span></code>, <code class="docutils literal notranslate"><span class="pre">location_name</span></code>, <code class="docutils literal notranslate"><span class="pre">branch</span></code>, and <code class="docutils literal notranslate"><span class="pre">branch_name</span></code></p>
+<div class="highlight-sql notranslate"><div class="highlight"><pre><span></span><span class="k">select</span>
+<span class="w">  </span><span class="ss">&quot;location&quot;</span><span class="p">.</span><span class="o">*</span><span class="p">,</span>
+<span class="w">  </span><span class="ss">&quot;location_name&quot;</span><span class="p">.</span><span class="o">*</span><span class="p">,</span>
+<span class="w">  </span><span class="ss">&quot;branch&quot;</span><span class="p">.</span><span class="o">*</span><span class="p">,</span>
+<span class="w">  </span><span class="ss">&quot;branch_name&quot;</span><span class="p">.</span><span class="o">*</span>
+<span class="k">from</span>
+<span class="w">  </span><span class="ss">&quot;location&quot;</span>
+<span class="w">  </span><span class="k">join</span><span class="w"> </span><span class="ss">&quot;location_name&quot;</span><span class="w"> </span><span class="k">on</span><span class="w"> </span><span class="ss">&quot;location_name&quot;</span><span class="p">.</span><span class="n">location_id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ss">&quot;location&quot;</span><span class="p">.</span><span class="n">id</span>
+<span class="w">  </span><span class="k">join</span><span class="w"> </span><span class="ss">&quot;branch&quot;</span><span class="w"> </span><span class="k">on</span><span class="w"> </span><span class="ss">&quot;branch&quot;</span><span class="p">.</span><span class="n">code_num</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ss">&quot;location&quot;</span><span class="p">.</span><span class="n">branch_code_num</span>
+<span class="w">  </span><span class="k">join</span><span class="w"> </span><span class="ss">&quot;branch_name&quot;</span><span class="w"> </span><span class="k">on</span><span class="w"> </span><span class="ss">&quot;branch_name&quot;</span><span class="p">.</span><span class="n">branch_id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ss">&quot;branch&quot;</span><span class="p">.</span><span class="n">id</span>
+<span class="k">order</span><span class="w"> </span><span class="k">by</span>
+<span class="w">  </span><span class="ss">&quot;location&quot;</span><span class="p">.</span><span class="n">id</span>
+</pre></div>
+</div>
+</section>
+<section id="location-table">
+<h2><a class="toc-backref" href="#id14" role="doc-backlink"><strong>location</strong> Table</a><a class="headerlink" href="#location-table" title="Permalink to this heading"></a></h2>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>column name</p></th>
+<th class="head"><p>description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>id</p></td>
+<td><p>primary key for location</p></td>
+</tr>
+<tr class="row-odd"><td><p>code</p></td>
+<td><p>location code</p></td>
+</tr>
+<tr class="row-even"><td><p>branch_code_num</p></td>
+<td><p>foreign key to <code class="docutils literal notranslate"><span class="pre">branch</span></code> (code)</p></td>
+</tr>
+<tr class="row-odd"><td><p>parent_location_code</p></td>
+<td><p>N/A</p></td>
+</tr>
+<tr class="row-even"><td><p>is_public</p></td>
+<td><p>indicates if patrons see the code in the public interfaces</p></td>
+</tr>
+<tr class="row-odd"><td><p>is_requestable</p></td>
+<td><p>N/A</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="location-name-table">
+<h2><a class="toc-backref" href="#id15" role="doc-backlink"><strong>location_name</strong> Table</a><a class="headerlink" href="#location-name-table" title="Permalink to this heading"></a></h2>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>column name</p></th>
+<th class="head"><p>description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>location_id</p></td>
+<td><p>foreign key to <code class="docutils literal notranslate"><span class="pre">location</span></code> table</p></td>
+</tr>
+<tr class="row-odd"><td><p>name</p></td>
+<td><p>location full name</p></td>
+</tr>
+<tr class="row-even"><td><p>iii_language_id</p></td>
+<td><p>N/A</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="branch-table">
+<h2><a class="toc-backref" href="#id16" role="doc-backlink"><strong>branch</strong> Table</a><a class="headerlink" href="#branch-table" title="Permalink to this heading"></a></h2>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>column name</p></th>
+<th class="head"><p>description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>id</p></td>
+<td><p>primary key for row</p></td>
+</tr>
+<tr class="row-odd"><td><p>address</p></td>
+<td><p>post office address for branch</p></td>
+</tr>
+<tr class="row-even"><td><p>email_source</p></td>
+<td><p>source email address for email sent by branch</p></td>
+</tr>
+<tr class="row-odd"><td><p>email_reply_to</p></td>
+<td><p>reply email address for email sent by branch</p></td>
+</tr>
+<tr class="row-even"><td><p>address_latitude</p></td>
+<td><p>approximate branch latitude</p></td>
+</tr>
+<tr class="row-odd"><td><p>address_longitude</p></td>
+<td><p>approximate branch longitude</p></td>
+</tr>
+<tr class="row-even"><td><p>code_num</p></td>
+<td><p>primary key (branch code number)</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="branch-name-table">
+<h2><a class="toc-backref" href="#id17" role="doc-backlink"><strong>branch_name</strong> Table</a><a class="headerlink" href="#branch-name-table" title="Permalink to this heading"></a></h2>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>column name</p></th>
+<th class="head"><p>description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>branch_id</p></td>
+<td><p>foreign key to <code class="docutils literal notranslate"><span class="pre">branch</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p>name</p></td>
+<td><p>branch full name</p></td>
+</tr>
+<tr class="row-even"><td><p>iii_language_id</p></td>
+<td><p>N/A</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="phrase-entry-table">
+<h2><a class="toc-backref" href="#id18" role="doc-backlink"><strong>phrase_entry</strong> Table</a><a class="headerlink" href="#phrase-entry-table" title="Permalink to this heading"></a></h2>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>column name</p></th>
+<th class="head"><p>description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>id</p></td>
+<td><p>primary key for row</p></td>
+</tr>
+<tr class="row-odd"><td><p>record_id</p></td>
+<td><p>foreign key to record_metadata</p></td>
+</tr>
+<tr class="row-even"><td><p>index_tag</p></td>
+<td><p>type of index (this data only contains “d”–subject indexes)</p></td>
+</tr>
+<tr class="row-odd"><td><p>varfield_type_code</p></td>
+<td><p>type of varfield (this data only contains “d”–subject varfields)</p></td>
+</tr>
+<tr class="row-even"><td><p>occurrence</p></td>
+<td><p>N/A</p></td>
+</tr>
+<tr class="row-odd"><td><p>is_permuted</p></td>
+<td><p>boolean value indicating if text is permuted</p></td>
+</tr>
+<tr class="row-even"><td><p>type2</p></td>
+<td><p>N/A</p></td>
+</tr>
+<tr class="row-odd"><td><p>type3</p></td>
+<td><p>suppression code for public display:</p>
+<p><code class="docutils literal notranslate"><span class="pre">n</span></code>: suppress from public display``</p>
+<p>(blank): do not suppress from public display</p>
+</td>
+</tr>
+<tr class="row-even"><td><p>index_entry</p></td>
+<td><p>index value (subject index)</p></td>
+</tr>
+<tr class="row-odd"><td><p>insert_title</p></td>
+<td><p>normalized title</p></td>
+</tr>
+<tr class="row-even"><td><p>phrase_rule_rule_num</p></td>
+<td><p>N/A</p></td>
+</tr>
+<tr class="row-odd"><td><p>phrase_rule_operation</p></td>
+<td><p>N/A</p></td>
+</tr>
+<tr class="row-even"><td><p>phrase_rule_subfield_list</p></td>
+<td><p>N/A</p></td>
+</tr>
+<tr class="row-odd"><td><p>original_content</p></td>
+<td><p>non-normalized original input</p></td>
+</tr>
+<tr class="row-even"><td><p>parent_record_id</p></td>
+<td><p>N/A</p></td>
+</tr>
+<tr class="row-odd"><td><p>insert_title_tag</p></td>
+<td><p>N/A</p></td>
+</tr>
+<tr class="row-even"><td><p>insert_title_occ</p></td>
+<td><p>N/A</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="index.html" class="btn btn-neutral float-left" title="collection-analysis documentation &amp; resources" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="static_queries.html" class="btn btn-neutral float-right" title="Static SQL Queries &amp; Reports" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021, Cincinnati &amp; Hamilton County Public Library.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

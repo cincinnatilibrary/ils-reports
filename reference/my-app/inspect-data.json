@@ -1,0 +1,111 @@
+{
+  "chpl": {
+    "hash": "0e8767eaf32226296b9f891b9bb3298cb5f83349c48ce41ca7b9d60675e8c7ef",
+    "size": 28672,
+    "file": "chpl.db",
+    "tables": {
+      "branch_locations": {
+        "count": 44
+      }
+    }
+  },
+  "current_collection": {
+    "hash": "7d558c2e7f9fee7cb24a78f5ea5207db98b2ddf7d0db66c74697c5e2c2d814ee",
+    "size": 5909401600,
+    "file": "current_collection.db",
+    "tables": {
+      "record_metadata": {
+        "count": 15630033
+      },
+      "bib": {
+        "count": 2174130
+      },
+      "item": {
+        "count": 4813051
+      },
+      "bib_record": {
+        "count": 2174130
+      },
+      "volume_record": {
+        "count": 338487
+      },
+      "item_message": {
+        "count": 32326
+      },
+      "in_transit_data": {
+        "count": 20736
+      },
+      "language_property": {
+        "count": 485
+      },
+      "bib_record_item_record_link": {
+        "count": 5453281
+      },
+      "volume_record_item_record_link": {
+        "count": 500811
+      },
+      "branch_name": {
+        "count": 52
+      },
+      "branch": {
+        "count": 52
+      },
+      "country_property_myuser": {
+        "count": 333
+      },
+      "item_status_property": {
+        "count": 30
+      },
+      "itype_property": {
+        "count": 116
+      },
+      "bib_level_property": {
+        "count": 8
+      },
+      "material_property": {
+        "count": 29
+      },
+      "location": {
+        "count": 2892
+      },
+      "location_name": {
+        "count": 2892
+      },
+      "hold": {
+        "count": 146963
+      },
+      "circ_agg": {
+        "count": 1524966
+      },
+      "circ_leased_items": {
+        "count": 25410
+      },
+      "branch_locations": {
+        "count": 44
+      },
+      "sqlite_stat1": {
+        "count": 64
+      }
+    }
+  },
+  "items-18month-circ": {
+    "hash": "e7ed138e379223135dfc3b3501ed027db37732a9c0b2f8dbe24bc1447bc5e99a",
+    "size": 839680000,
+    "file": "items-18month-circ.db",
+    "tables": {
+      "output.sqlite3": {
+        "count": 2596510
+      }
+    }
+  },
+  "w_d_items": {
+    "hash": "98f6f7e899c96f20300b33717b2e1b27374dd3b93365a1e244cc337a71048362",
+    "size": 653012992,
+    "file": "w_d_items.db",
+    "tables": {
+      "items": {
+        "count": 2567609
+      }
+    }
+  }
+}

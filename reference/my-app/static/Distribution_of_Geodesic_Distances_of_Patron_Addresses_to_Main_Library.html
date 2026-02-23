@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    #vis.vega-embed {
+      width: 100%;
+      display: flex;
+    }
+
+    #vis.vega-embed details,
+    #vis.vega-embed details summary {
+      position: relative;
+    }
+  </style>
+  <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/vega@5"></script>
+  <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/vega-lite@5.8.0"></script>
+  <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/vega-embed@6"></script>
+</head>
+<body>
+  <div id="vis"></div>
+  <script>
+    (function(vegaEmbed) {
+      var spec = {"config": {"view": {"continuousWidth": 300, "continuousHeight": 300}}, "data": {"name": "data-8a5b6cdef0d1acbaa8afc75eb696c719"}, "mark": {"type": "bar"}, "encoding": {"tooltip": [{"field": "distance_bin", "type": "ordinal"}, {"field": "counts", "type": "quantitative"}], "x": {"axis": {"labelAngle": -45}, "field": "distance_bin", "sort": ["0-999", "1000-1999", "2000-2999", "3000-3999", "4000-4999", "5000-5999", "6000-6999", "7000-7999", "8000-8999", "9000-9999", "10000-10999", "11000-11999", "12000-12999", "13000-13999", "14000-14999", "15000-15999", "16000-16999", "17000-17999", "18000-18999", "19000-19999", "20000-20999", "21000-21999", "22000-22999", "23000-23999", "24000-24999", "25000-25999", "26000-26999", "27000-27999", "28000-28999", "29000-29999", "30000-30999", "31000-31999", "32000-32999", "33000-33999", "34000-34999"], "title": "Distance Range (m)", "type": "nominal"}, "y": {"field": "counts", "title": "Count", "type": "quantitative"}}, "title": "Distribution of Geodesic Distances of Patron Addresses to Main Library", "width": 900, "$schema": "https://vega.github.io/schema/vega-lite/v5.8.0.json", "datasets": {"data-8a5b6cdef0d1acbaa8afc75eb696c719": [{"distance_bin": "0-999", "counts": 4817}, {"distance_bin": "1000-1999", "counts": 5123}, {"distance_bin": "2000-2999", "counts": 4941}, {"distance_bin": "3000-3999", "counts": 6258}, {"distance_bin": "4000-4999", "counts": 10926}, {"distance_bin": "5000-5999", "counts": 9299}, {"distance_bin": "6000-6999", "counts": 12842}, {"distance_bin": "7000-7999", "counts": 18607}, {"distance_bin": "8000-8999", "counts": 15464}, {"distance_bin": "9000-9999", "counts": 14821}, {"distance_bin": "10000-10999", "counts": 16880}, {"distance_bin": "11000-11999", "counts": 19452}, {"distance_bin": "12000-12999", "counts": 19286}, {"distance_bin": "13000-13999", "counts": 17545}, {"distance_bin": "14000-14999", "counts": 17593}, {"distance_bin": "15000-15999", "counts": 16012}, {"distance_bin": "16000-16999", "counts": 13661}, {"distance_bin": "17000-17999", "counts": 11513}, {"distance_bin": "18000-18999", "counts": 9005}, {"distance_bin": "19000-19999", "counts": 8445}, {"distance_bin": "20000-20999", "counts": 7619}, {"distance_bin": "21000-21999", "counts": 6174}, {"distance_bin": "22000-22999", "counts": 4708}, {"distance_bin": "23000-23999", "counts": 2755}, {"distance_bin": "24000-24999", "counts": 2987}, {"distance_bin": "25000-25999", "counts": 1974}, {"distance_bin": "26000-26999", "counts": 2875}, {"distance_bin": "27000-27999", "counts": 2173}, {"distance_bin": "28000-28999", "counts": 2367}, {"distance_bin": "29000-29999", "counts": 1347}, {"distance_bin": "30000-30999", "counts": 994}, {"distance_bin": "31000-31999", "counts": 1033}, {"distance_bin": "32000-32999", "counts": 236}, {"distance_bin": "33000-33999", "counts": 66}, {"distance_bin": "34000-34999", "counts": 14}]}};
+      var embedOpt = {"mode": "vega-lite"};
+
+      function showError(el, error){
+          el.innerHTML = ('<div style="color:red;">'
+                          + '<p>JavaScript Error: ' + error.message + '</p>'
+                          + "<p>This usually means there's a typo in your chart specification. "
+                          + "See the javascript console for the full traceback.</p>"
+                          + '</div>');
+          throw error;
+      }
+      const el = document.getElementById('vis');
+      vegaEmbed("#vis", spec, embedOpt)
+        .catch(error => showError(el, error));
+    })(vegaEmbed);
+
+  </script>
+</body>
+</html>

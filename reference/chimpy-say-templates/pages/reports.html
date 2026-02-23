@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Reports - CHPL Analytics</title>
+  <link rel="stylesheet" href="../css/main.css">
+  <style>
+    .report-card {
+      cursor: pointer;
+      transition: transform var(--transition-fast), box-shadow var(--transition-fast);
+    }
+    .report-card:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-lg);
+    }
+    .report-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: var(--radius-lg);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: var(--space-4);
+    }
+    .report-icon svg {
+      width: 24px;
+      height: 24px;
+    }
+    .report-icon.blue { background-color: var(--status-info-bg); color: var(--chpl-blue); }
+    .report-icon.green { background-color: var(--status-success-bg); color: var(--chpl-green); }
+    .report-icon.purple { background-color: rgba(134, 89, 181, 0.15); color: var(--chpl-purple); }
+    .report-icon.yellow { background-color: var(--status-warning-bg); color: var(--chpl-yellow); }
+    .report-icon.coral { background-color: var(--status-error-bg); color: var(--chpl-coral); }
+  </style>
+</head>
+<body>
+  <div class="app-layout">
+    <!-- Sidebar -->
+    <aside class="app-sidebar">
+      <div class="sidebar-header">
+        <a href="dashboard.html" class="sidebar-logo">
+          <img src="../assets/CHPL_Brandmark_Secondary.svg" alt="CHPL" style="height: 28px;">
+          <span class="sidebar-logo-text">Analytics</span>
+        </a>
+      </div>
+
+      <nav class="sidebar-nav">
+        <div class="sidebar-section">
+          <div class="sidebar-section-title">Overview</div>
+          <a href="dashboard.html" class="sidebar-link">
+            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="3" y="3" width="7" height="7" rx="1"/>
+              <rect x="14" y="3" width="7" height="7" rx="1"/>
+              <rect x="3" y="14" width="7" height="7" rx="1"/>
+              <rect x="14" y="14" width="7" height="7" rx="1"/>
+            </svg>
+            Dashboard
+          </a>
+          <a href="data-table.html" class="sidebar-link">
+            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M3 6h18M3 12h18M3 18h18"/>
+            </svg>
+            Data Explorer
+          </a>
+          <a href="reports.html" class="sidebar-link active">
+            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+              <path d="M14 2v6h6"/>
+              <path d="M16 13H8"/>
+              <path d="M16 17H8"/>
+              <path d="M10 9H8"/>
+            </svg>
+            Reports
+          </a>
+        </div>
+
+        <div class="sidebar-section">
+          <div class="sidebar-section-title">Data Sources</div>
+          <a href="#" class="sidebar-link">
+            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <ellipse cx="12" cy="5" rx="9" ry="3"/>
+              <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/>
+              <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/>
+            </svg>
+            Databases
+          </a>
+          <a href="#" class="sidebar-link">
+            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+              <polyline points="17 8 12 3 7 8"/>
+              <line x1="12" y1="3" x2="12" y2="15"/>
+            </svg>
+            Uploads
+          </a>
+        </div>
+      </nav>
+
+      <div class="sidebar-footer">
+        <a href="#" class="sidebar-link">
+          <img src="../assets/chimpy.svg" alt="" style="width: 20px; height: 20px; border-radius: 4px;">
+          <span>User Account</span>
+        </a>
+      </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="app-main">
+      <header class="app-header">
+        <div>
+          <h1 style="font-size: var(--text-xl); margin: 0;">Reports</h1>
+        </div>
+        <div style="display: flex; align-items: center; gap: var(--space-3);">
+          <button class="btn btn-primary">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="12" y1="5" x2="12" y2="19"/>
+              <line x1="5" y1="12" x2="19" y2="12"/>
+            </svg>
+            New Report
+          </button>
+          <button class="theme-toggle" data-theme-toggle aria-label="Toggle theme">
+            <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+            </svg>
+            <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="5"/>
+              <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
+            </svg>
+          </button>
+        </div>
+      </header>
+
+      <div class="app-content">
+        <!-- Tabs -->
+        <div class="tabs">
+          <div class="tab active">All Reports</div>
+          <div class="tab">Scheduled</div>
+          <div class="tab">Favorites</div>
+          <div class="tab">Shared with me</div>
+        </div>
+
+        <!-- Alert -->
+        <div class="alert alert-info" style="margin-bottom: var(--space-6);">
+          <div class="alert-title">New reporting features available</div>
+          <p style="margin: 0; font-size: var(--text-sm);">You can now schedule reports to run automatically and share them with team members. <a href="#">Learn more</a></p>
+        </div>
+
+        <!-- Report Templates Section -->
+        <div style="margin-bottom: var(--space-8);">
+          <h2 style="font-size: var(--text-lg); margin-bottom: var(--space-4);">Report Templates</h2>
+          <div class="grid grid-cols-3">
+            <div class="card report-card">
+              <div class="card-body">
+                <div class="report-icon blue">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M18 20V10"/>
+                    <path d="M12 20V4"/>
+                    <path d="M6 20v-6"/>
+                  </svg>
+                </div>
+                <h3 style="font-size: var(--text-base); margin-bottom: var(--space-2);">Usage Analytics</h3>
+                <p class="text-muted" style="font-size: var(--text-sm); margin: 0;">Track query patterns, response times, and resource utilization across all databases.</p>
+              </div>
+            </div>
+
+            <div class="card report-card">
+              <div class="card-body">
+                <div class="report-icon green">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                    <circle cx="9" cy="7" r="4"/>
+                    <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+                    <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                  </svg>
+                </div>
+                <h3 style="font-size: var(--text-base); margin-bottom: var(--space-2);">User Activity</h3>
+                <p class="text-muted" style="font-size: var(--text-sm); margin: 0;">Monitor user engagement, active sessions, and access patterns.</p>
+              </div>
+            </div>
+
+            <div class="card report-card">
+              <div class="card-body">
+                <div class="report-icon purple">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"/>
+                    <path d="M12 6v6l4 2"/>
+                  </svg>
+                </div>
+                <h3 style="font-size: var(--text-base); margin-bottom: var(--space-2);">Performance Trends</h3>
+                <p class="text-muted" style="font-size: var(--text-sm); margin: 0;">Analyze query performance trends and identify optimization opportunities.</p>
+              </div>
+            </div>
+
+            <div class="card report-card">
+              <div class="card-body">
+                <div class="report-icon yellow">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <ellipse cx="12" cy="5" rx="9" ry="3"/>
+                    <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/>
+                    <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/>
+                  </svg>
+                </div>
+                <h3 style="font-size: var(--text-base); margin-bottom: var(--space-2);">Data Growth</h3>
+                <p class="text-muted" style="font-size: var(--text-sm); margin: 0;">Track database sizes, row counts, and storage utilization over time.</p>
+              </div>
+            </div>
+
+            <div class="card report-card">
+              <div class="card-body">
+                <div class="report-icon coral">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+                    <line x1="12" y1="9" x2="12" y2="13"/>
+                    <line x1="12" y1="17" x2="12.01" y2="17"/>
+                  </svg>
+                </div>
+                <h3 style="font-size: var(--text-base); margin-bottom: var(--space-2);">Error Analysis</h3>
+                <p class="text-muted" style="font-size: var(--text-sm); margin: 0;">Review failed queries, error rates, and common failure patterns.</p>
+              </div>
+            </div>
+
+            <div class="card report-card">
+              <div class="card-body">
+                <div class="report-icon blue">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                    <line x1="16" y1="2" x2="16" y2="6"/>
+                    <line x1="8" y1="2" x2="8" y2="6"/>
+                    <line x1="3" y1="10" x2="21" y2="10"/>
+                  </svg>
+                </div>
+                <h3 style="font-size: var(--text-base); margin-bottom: var(--space-2);">Custom Date Range</h3>
+                <p class="text-muted" style="font-size: var(--text-sm); margin: 0;">Build a custom report with your own date range and metrics.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Recent Reports Section -->
+        <div>
+          <h2 style="font-size: var(--text-lg); margin-bottom: var(--space-4);">Recent Reports</h2>
+          <div class="card">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Report Name</th>
+                  <th>Type</th>
+                  <th>Created</th>
+                  <th>Last Run</th>
+                  <th>Schedule</th>
+                  <th class="col-actions">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>
+                    <div style="display: flex; align-items: center; gap: var(--space-3);">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color: var(--chpl-blue);">
+                        <path d="M18 20V10"/>
+                        <path d="M12 20V4"/>
+                        <path d="M6 20v-6"/>
+                      </svg>
+                      <span>Weekly Usage Summary</span>
+                    </div>
+                  </td>
+                  <td><span class="tag">Usage Analytics</span></td>
+                  <td class="text-muted">Jan 10, 2024</td>
+                  <td class="text-muted">Jan 28, 2024</td>
+                  <td><span class="badge badge-info">Weekly</span></td>
+                  <td class="col-actions">
+                    <button class="btn btn-secondary btn-sm">View</button>
+                  </td>
+                </tr>
+                <tr>
+                  <td>
+                    <div style="display: flex; align-items: center; gap: var(--space-3);">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color: var(--chpl-green);">
+                        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                        <circle cx="9" cy="7" r="4"/>
+                      </svg>
+                      <span>Monthly User Report</span>
+                    </div>
+                  </td>
+                  <td><span class="tag">User Activity</span></td>
+                  <td class="text-muted">Jan 05, 2024</td>
+                  <td class="text-muted">Jan 25, 2024</td>
+                  <td><span class="badge badge-info">Monthly</span></td>
+                  <td class="col-actions">
+                    <button class="btn btn-secondary btn-sm">View</button>
+                  </td>
+                </tr>
+                <tr>
+                  <td>
+                    <div style="display: flex; align-items: center; gap: var(--space-3);">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color: var(--chpl-coral);">
+                        <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+                        <line x1="12" y1="9" x2="12" y2="13"/>
+                      </svg>
+                      <span>Error Log Analysis</span>
+                    </div>
+                  </td>
+                  <td><span class="tag">Error Analysis</span></td>
+                  <td class="text-muted">Jan 20, 2024</td>
+                  <td class="text-muted">Jan 27, 2024</td>
+                  <td><span class="badge">Manual</span></td>
+                  <td class="col-actions">
+                    <button class="btn btn-secondary btn-sm">View</button>
+                  </td>
+                </tr>
+                <tr>
+                  <td>
+                    <div style="display: flex; align-items: center; gap: var(--space-3);">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color: var(--chpl-purple);">
+                        <circle cx="12" cy="12" r="10"/>
+                        <path d="M12 6v6l4 2"/>
+                      </svg>
+                      <span>Q4 Performance Review</span>
+                    </div>
+                  </td>
+                  <td><span class="tag">Performance</span></td>
+                  <td class="text-muted">Dec 15, 2023</td>
+                  <td class="text-muted">Jan 02, 2024</td>
+                  <td><span class="badge">Manual</span></td>
+                  <td class="col-actions">
+                    <button class="btn btn-secondary btn-sm">View</button>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script src="../js/theme.js"></script>
+</body>
+</html>

@@ -1,0 +1,8 @@
+/**
+ * CHPL Design System - Main Entry Point
+ * Import this file to get the complete design system
+ */
+
+@import url("variables.css");
+@import url("base.css");
+@import url("components.css");

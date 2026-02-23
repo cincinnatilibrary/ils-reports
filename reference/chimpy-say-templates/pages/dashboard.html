@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard - CHPL Analytics</title>
+  <link rel="stylesheet" href="../css/main.css">
+  <style>
+    /* Page-specific chart placeholder styles */
+    .chart-placeholder {
+      background: linear-gradient(135deg, var(--bg-tertiary) 0%, var(--bg-sunken) 100%);
+      border-radius: var(--radius-md);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--text-muted);
+      font-size: var(--text-sm);
+      min-height: 200px;
+    }
+  </style>
+</head>
+<body>
+  <div class="app-layout">
+    <!-- Sidebar -->
+    <aside class="app-sidebar">
+      <div class="sidebar-header">
+        <a href="dashboard.html" class="sidebar-logo">
+          <img src="../assets/CHPL_Brandmark_Secondary.svg" alt="CHPL" style="height: 28px;">
+          <span class="sidebar-logo-text">Analytics</span>
+        </a>
+      </div>
+
+      <nav class="sidebar-nav">
+        <div class="sidebar-section">
+          <div class="sidebar-section-title">Overview</div>
+          <a href="dashboard.html" class="sidebar-link active">
+            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="3" y="3" width="7" height="7" rx="1"/>
+              <rect x="14" y="3" width="7" height="7" rx="1"/>
+              <rect x="3" y="14" width="7" height="7" rx="1"/>
+              <rect x="14" y="14" width="7" height="7" rx="1"/>
+            </svg>
+            Dashboard
+          </a>
+          <a href="data-table.html" class="sidebar-link">
+            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M3 6h18M3 12h18M3 18h18"/>
+            </svg>
+            Data Explorer
+          </a>
+          <a href="reports.html" class="sidebar-link">
+            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+              <path d="M14 2v6h6"/>
+              <path d="M16 13H8"/>
+              <path d="M16 17H8"/>
+              <path d="M10 9H8"/>
+            </svg>
+            Reports
+          </a>
+        </div>
+
+        <div class="sidebar-section">
+          <div class="sidebar-section-title">Data Sources</div>
+          <a href="#" class="sidebar-link">
+            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <ellipse cx="12" cy="5" rx="9" ry="3"/>
+              <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/>
+              <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/>
+            </svg>
+            Databases
+          </a>
+          <a href="#" class="sidebar-link">
+            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+              <polyline points="17 8 12 3 7 8"/>
+              <line x1="12" y1="3" x2="12" y2="15"/>
+            </svg>
+            Uploads
+          </a>
+          <a href="#" class="sidebar-link">
+            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
+              <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
+            </svg>
+            Connections
+          </a>
+        </div>
+
+        <div class="sidebar-section">
+          <div class="sidebar-section-title">Settings</div>
+          <a href="#" class="sidebar-link">
+            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="3"/>
+              <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+            </svg>
+            Settings
+          </a>
+        </div>
+      </nav>
+
+      <div class="sidebar-footer">
+        <a href="#" class="sidebar-link">
+          <img src="../assets/chimpy.svg" alt="" style="width: 20px; height: 20px; border-radius: 4px;">
+          <span>User Account</span>
+        </a>
+      </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="app-main">
+      <header class="app-header">
+        <div>
+          <h1 style="font-size: var(--text-xl); margin: 0;">Dashboard</h1>
+        </div>
+        <div style="display: flex; align-items: center; gap: var(--space-3);">
+          <div class="search-box" style="width: 240px;">
+            <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="11" cy="11" r="8"/>
+              <path d="M21 21l-4.35-4.35"/>
+            </svg>
+            <input type="search" placeholder="Search...">
+          </div>
+          <button class="theme-toggle" data-theme-toggle aria-label="Toggle theme">
+            <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+            </svg>
+            <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="5"/>
+              <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
+            </svg>
+          </button>
+        </div>
+      </header>
+
+      <div class="app-content">
+        <!-- Stat Cards -->
+        <div class="grid grid-cols-4" style="margin-bottom: var(--space-6);">
+          <div class="card stat-card">
+            <div class="stat-label">Total Records</div>
+            <div class="stat-value">1,284,592</div>
+            <div class="stat-change positive">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M18 15l-6-6-6 6"/>
+              </svg>
+              12.5% from last month
+            </div>
+          </div>
+
+          <div class="card stat-card">
+            <div class="stat-label">Active Queries</div>
+            <div class="stat-value">247</div>
+            <div class="stat-change positive">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M18 15l-6-6-6 6"/>
+              </svg>
+              8.2% from last week
+            </div>
+          </div>
+
+          <div class="card stat-card">
+            <div class="stat-label">Data Sources</div>
+            <div class="stat-value">18</div>
+            <div class="stat-change" style="color: var(--text-muted);">
+              No change
+            </div>
+          </div>
+
+          <div class="card stat-card">
+            <div class="stat-label">Avg Response Time</div>
+            <div class="stat-value">142ms</div>
+            <div class="stat-change negative">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M6 9l6 6 6-6"/>
+              </svg>
+              3.1% slower
+            </div>
+          </div>
+        </div>
+
+        <!-- Charts Row -->
+        <div class="grid grid-cols-2" style="margin-bottom: var(--space-6);">
+          <div class="card">
+            <div class="card-header">
+              <h3 class="card-title">Query Volume</h3>
+              <select style="padding: var(--space-1) var(--space-2); font-size: var(--text-sm);">
+                <option>Last 7 days</option>
+                <option>Last 30 days</option>
+                <option>Last 90 days</option>
+              </select>
+            </div>
+            <div class="card-body">
+              <div class="chart-placeholder" style="height: 240px;">
+                Chart visualization would go here
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header">
+              <h3 class="card-title">Data Distribution by Source</h3>
+            </div>
+            <div class="card-body">
+              <div class="chart-placeholder" style="height: 240px;">
+                Pie/donut chart would go here
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Recent Activity -->
+        <div class="card">
+          <div class="card-header">
+            <h3 class="card-title">Recent Queries</h3>
+            <a href="data-table.html" class="btn btn-secondary btn-sm">View All</a>
+          </div>
+          <div class="card-body" style="padding: 0;">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Query</th>
+                  <th>Database</th>
+                  <th>Rows</th>
+                  <th>Duration</th>
+                  <th>Status</th>
+                  <th>Time</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><code style="font-size: var(--text-xs);">SELECT * FROM users WHERE...</code></td>
+                  <td>production_db</td>
+                  <td class="col-numeric">1,247</td>
+                  <td class="col-numeric">89ms</td>
+                  <td><span class="badge badge-success">Complete</span></td>
+                  <td class="text-muted">2 min ago</td>
+                </tr>
+                <tr>
+                  <td><code style="font-size: var(--text-xs);">SELECT COUNT(*) FROM orders...</code></td>
+                  <td>analytics_db</td>
+                  <td class="col-numeric">1</td>
+                  <td class="col-numeric">234ms</td>
+                  <td><span class="badge badge-success">Complete</span></td>
+                  <td class="text-muted">5 min ago</td>
+                </tr>
+                <tr>
+                  <td><code style="font-size: var(--text-xs);">INSERT INTO events VALUES...</code></td>
+                  <td>events_db</td>
+                  <td class="col-numeric">500</td>
+                  <td class="col-numeric">1.2s</td>
+                  <td><span class="badge badge-warning">Running</span></td>
+                  <td class="text-muted">7 min ago</td>
+                </tr>
+                <tr>
+                  <td><code style="font-size: var(--text-xs);">UPDATE products SET price...</code></td>
+                  <td>production_db</td>
+                  <td class="col-numeric">342</td>
+                  <td class="col-numeric">156ms</td>
+                  <td><span class="badge badge-success">Complete</span></td>
+                  <td class="text-muted">12 min ago</td>
+                </tr>
+                <tr>
+                  <td><code style="font-size: var(--text-xs);">DELETE FROM temp_data WHERE...</code></td>
+                  <td>staging_db</td>
+                  <td class="col-numeric">0</td>
+                  <td class="col-numeric">45ms</td>
+                  <td><span class="badge badge-error">Failed</span></td>
+                  <td class="text-muted">15 min ago</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script src="../js/theme.js"></script>
+</body>
+</html>

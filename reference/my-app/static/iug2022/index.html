@@ -1,0 +1,427 @@
+<!doctype html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+		
+		<meta name="description" content="Ray Voelker - IUG 2022 - Collection Analysis for $5 a Month. CHEAP!">
+  		<meta name="keywords" content="Ray Voelker, Cincinnati & Hamilton County Public Library, IUG, IUG 2022, Datasette, Python, SQLite, SQL, ">
+  		<meta name="author" content="Ray Voelker">
+
+		<title>Ray Voelker - IUG 2022 - Collection Analysis for $5 a Month. CHEAP!</title>
+		
+		<link rel="stylesheet" href="dist/reset.css">
+		<link rel="stylesheet" href="dist/reveal.css">
+		<link rel="stylesheet" href="dist/theme/black.css" id="theme">
+
+		<!-- Theme used for syntax highlighted code -->
+		<link rel="stylesheet" href="plugin/highlight/monokai.css" id="highlight-theme">
+		
+		<!-- mad font-->
+		<link href="css/stylesheet.css" rel="stylesheet">
+
+	</head>
+	<body>
+		<div class="reveal">
+			<div class="slides">
+				<section data-background="white">
+					<img src='img/iug_connections_crop.jpg' style="height: 150px; margin: 0 auto auto auto; background: transparent;">
+					<img class="r-stretch" style="height: 300px; margin: 0 auto auto auto;" src="img/CHPL_Brandmark_Primary.png">
+					<div class="font-container" style="font-family: 'MADFONT'; font-weight: normal; font-style: normal;">
+						<p style="font-size: 45px;">Collection Analysis <br />for $5 a Month. <span style="color: #ea454b;">CHEAP</span></p>
+					</div>
+
+					<p>
+						<a style="font-size: 32px" href="https://rayvoelker.github.io/iug2022/index.html">https://rayvoelker.github.io/iug2022/</a><br />
+						<a style="font-size: 32px" href="https://collection-analysis.cincy.pl/">https://collection-analysis.cincy.pl/</a>
+					</p>
+					
+					<p style="font-size: 30px;">
+						Ray Voelker<br />
+						ray.voelker@gmail.com | ray.voelker@cincinnatilibrary.org<br />
+						
+						<!-- style="height: 200px; margin: 0 auto auto auto; background: transparent;" -->
+					</p>
+				</section>
+				<section>
+					<h2 style="text-transform: none;">Talk Overview</h2>
+					<ol>
+						<li>Collection Analysis Platform Overview (Datasette)</li>
+						<li class="fragment">Collection Snapshot Creation: Overview of the workflow and automation involved in extracting the collection metadata from the ILS (Sierra)</li>
+						<li class="fragment">The Analysis! (more Datasette + SQL + other tools)</li>
+					</ol>
+				</section>
+
+				<section data-background="white">
+					<h2 style="text-transform: none;"><a href="https://datasette.io/">https://datasette.io/</a></h2>
+					<img src="./img/datasette.io.png">
+				</section>
+				<section data-background="white">
+					<h2 style="text-transform: none;">Collection Analysis Platform Overview</h2> 
+					<p>
+						<ul>
+							<li>
+								Datasette is described by its creator, Simon Willison, as "a tool for exploring and publishing data".
+							</li> 
+							<li class="fragment">
+								“Datasette is aimed at 
+								<span style="color: firebrick">journalists</span>, 
+								<span style="color: firebrick">museum curators</span>,
+								<span style="color: firebrick">archivists</span>,
+								<span style="color: firebrick">local governments</span> and 
+								<span style="color: firebrick "><b><u>anyone else who has data that they wish to share with the world</u></b></span>.”
+							</li>
+						</ul>
+					</p>
+				</section>
+				<section>
+					<h2 style="text-transform: none;">Simon's Datasette Presentations / Demos</h2>					
+					<ul>
+						<li>
+							“Introduction to Datasette and sqlite-utils”<br />
+							<a href="https://www.youtube.com/watch?v=7kDFBnXaw-c">https://www.youtube.com/watch?v=7kDFBnXaw-c</a>
+						</li>
+						<li>
+							“Simon Willison - Instant serverless APIs, powered by SQLite - PyCon 2019”<br />
+							<a href="https://www.youtube.com/watch?v=pTr1uLQTJNE">https://www.youtube.com/watch?v=pTr1uLQTJNE</a>
+						</li>
+						<li>
+							“Keynote: Simon Willison - Datasette and Dogsheep: Liberating your personal data”
+							<a href="https://www.youtube.com/watch?v=UFn82w-97kI">https://www.youtube.com/watch?v=UFn82w-97kI</a>
+						</li>							
+					</ul>
+				</section>
+
+				<section>
+					<h2 style="text-transform: none;">Simon's Datasette Tutorials</h2>					
+					<ul>
+						<li>
+							<a href="https://datasette.io/tutorials">https://datasette.io/tutorials</a>
+							<ul>
+								<li class="fragment">
+									"Exploring a database with Datasette" <br />
+									<a href="https://datasette.io/tutorials/explore">https://datasette.io/tutorials/explore</a>
+								</li>
+								<li class="fragment">
+									“Learn SQL with Datasette”<br />
+									<a href="https://datasette.io/tutorials/learn-sql">https://datasette.io/tutorials/learn-sql</a>
+								</li>
+							</ul>
+						</li>
+					</ul>
+				</section>
+
+				<section>
+					<h2 style="text-transform: none;">Things I ❤️ about Datasette</h2>
+					<ul>
+						<li class="fragment">Written in Python / Available via pip</li>
+						<li class="fragment">Open source + supportive developer</li>
+						<li class="fragment">Easy and intuitive to use</li>
+						<li class="fragment">Well-documented</li>
+						<li class="fragment">Useful, Large, and growing plugin library</li>
+						<li class="fragment">Built-in API... <span class="fragment"> Using SQL!</span></li>
+						<li class="fragment">Flexible deployment with scale-to-zero-cost / free hosting options in mind <br />
+							<span class="fragment">... or, <span class="font-container" style="font-family: 'MADFONT'; font-weight: normal; font-style: normal; color: #ea454b;" >CHEAP</span> hosting options</span></li>
+					</ul>
+				</section>
+
+				<section>
+					<h2 style="text-transform: none;">Cincinnati & Hamilton County Public Library: Collection Analysis</h2>
+					<a href="https://collection-analysis.cincy.pl">https://collection-analysis.cincy.pl</a>
+
+				</section>
+
+				<section
+					data-background="white"
+					data-background-iframe="https://collection-analysis.cincy.pl"
+					data-background-interactive>
+				</section>
+
+				<section>
+					<h2 style="text-transform: none;">Datasette Deployment / Hosting Options</h2>
+					<ul>
+						<li class="fragment">There are lots of ways to deploy Datasette <br />
+							(Datasette even has a built in command <code>datasette publish</code> that can package and deploy to services like Heroku or Google Cloud)</li>
+					</ul>
+				</section>
+
+				<section>
+					<h2 style="text-transform: none;">Datasette Deployment / Hosting Options</h2>
+					<p><a href="https://docs.datasette.io/en/stable/deploying.html#deployment-fundamentals">https://docs.datasette.io/en/stable/deploying.html#deployment-fundamentals</a></p>
+					<ul>
+						<li class="fragment">Running Datasette on a full Linux server has a lot of advantages, but does have a steep learning curve</li>
+						<li class="fragment">Luckily there are lots of help-pages, tutorials, and guides available!</li>
+					</ul>
+				</section>
+
+				<section>
+					<h2 style="text-transform: none;">DigitalOcean Droplet (Virtual Private Server)</h2>
+					<ul>
+						<li class="fragment">
+							<span class="font-container" style="font-family: 'MADFONT'; font-weight: normal; font-style: normal; color: #ea454b;">CHEAP</span>
+							<br />$5 per month for a 1 CPU / 1 GB memory / 25 GB Disk Linux Server (plenty for Datasette)
+						</li>
+						<li class="fragment">DigitalOcean has a great community forum with many great guides available for various System Administration tasks</li>
+					</ul>
+				</section>
+
+				<section>
+					<h2 style="text-transform: none;">Create DigitalOcean Droplet for Datasette Step by Step</h2>
+						<a href="https://ils-underground.github.io/python_datasette_vps.html">https://ils-underground.github.io/python_datasette_vps.html</a>			
+				</section>
+
+				<section>
+					<h2 style="text-transform: none;">2. Collection Snapshot Creation</h2>
+				</section>
+
+				<section>
+					<h2 style="text-transform: none;">Extracting and Building the Data</h2>
+					<p> Scripts For Extracting Data From ILS (Sierra)<br /><a style="font-size: smaller;" href="https://github.com/cincinnatilibrary/collection-analysis">https://github.com/cincinnatilibrary/collection-analysis</a></p>
+					<ul>
+						<li>This was originally done to support the task of automating data extraction from the ILS for the CollectionHQ Service</li>
+						<li class="fragment">We don't have to use CollectionHQ--Datasette can act as our data-analysis tool</li>
+					</ul>
+				</section>
+
+				<section>
+					<h2 style="text-transform: none;">3. The Analysis!</h2>
+				</section>
+
+
+				<section >
+					<h2 style="text-transform: none;">Looking at Data in Aggregate</h2>
+					<ul>
+						<li class="fragment">How many items created between 6-12 months ago have not checked out
+							<ul><li class="fragment">Facet by branch</li></ul>
+						</li>
+					</ul>
+				</section>
+
+				<section
+					data-background="white"
+					data-background-iframe="https://collection-analysis.cincy.pl/"
+					data-background-interactive> 
+				</section>
+
+				<section>
+					<pre>
+Downloadable Audiobook, 
+Downloadable Book, 
+Downloadable Video, 
+Downloadable Music, 
+Web Document
+					</pre>
+				</section>
+
+				<!-- <section
+					data-background="white"
+					data-background-iframe="https://ilsweb.cincinnatilibrary.org/collection-analysis/current_collection?sql=select%0D%0A++distinct+item.location_code%0D%0Afrom%0D%0A++item"
+					data-background-interactive> 
+				</section> -->
+
+				<section
+					data-background="white"
+					data-background-iframe="https://collection-analysis.cincy.pl/current_collection-5863793/item?_facet=item_format&_sort_desc=creation_date&_sort_desc=creation_date&checkout_total__exact=0&creation_date__gte=2021-03-01&creation_date__lte=2021-09-01&_sort_desc=creation_date"
+					data-background-interactive> 
+				</section>
+
+				<section
+					data-background="white"
+					data-background-iframe="https://collection-analysis.cincy.pl/current_collection/item_view?_facet=item_format&_sort_desc=creation_date&checkout_total__exact=0&creation_date__gte=2021-03-01&creation_date__lte=2021-09-01&item_format__notin=Downloadable+Audiobook%2C+Downloadable+Book%2C+Downloadable+Video%2C+Downloadable+Music%2C+Web+Document&_sort_desc=creation_date"
+					data-background-interactive> 
+				</section>
+
+				<section>
+					<img src="./img/datasette-custom-sql.png">
+				</section>
+
+				<section>
+					<pre>
+						<code>select
+  item.location_code,
+  l.location_name,
+  l.branch_name,
+  count(*) as count_items,
+  'https://collection-analysis.cincy.pl/current_collection/'
+  || 'item_view?location_code__exact='
+  || item.location_code as items_link
+from
+  item
+  join location_view as l on l.location_code = item.location_code
+where branch_name = :branch_name
+group by 1, 2, 3</code>
+					</pre>
+					<a href="https://collection-analysis.cincy.pl/current_collection?sql=select%0D%0A++item.location_code%2C%0D%0A++l.location_name%2C%0D%0A++l.branch_name%2C%0D%0A++count(*)+as+count_items%2C%0D%0A++'https%3A%2F%2Fcollection-analysis.cincy.pl%2Fcurrent_collection%2F'%0D%0A++||+'item_view%3Flocation_code__exact%3D'%0D%0A++||+item.location_code+as+items_link%0D%0Afrom%0D%0A++item%0D%0A++join+location_view+as+l+on+l.location_code+%3D+item.location_code%0D%0Awhere+branch_name+%3D+%3Abranch_name%0D%0Agroup+by+1%2C+2%2C+3&branch_name=">
+						run this query
+					</a>
+				</section>
+				
+				<section
+					data-background="white"
+					data-background-iframe="https://collection-analysis.cincy.pl/current_collection?sql=select%0D%0A++item.location_code%2C%0D%0A++l.location_name%2C%0D%0A++l.branch_name%2C%0D%0A++count(*)+as+count_items%2C%0D%0A++%27https%3A%2F%2Fcollection-analysis.cincy.pl%2Fcurrent_collection%2F%27%0D%0A++||+%27item_view%3Flocation_code__exact%3D%27%0D%0A++||+item.location_code+as+items_link%0D%0Afrom%0D%0A++item%0D%0A++join+location_view+as+l+on+l.location_code+%3D+item.location_code%0D%0Awhere+branch_name+%3D+%3Abranch_name%0D%0Agroup+by+1%2C+2%2C+3&branch_name="
+					data-background-interactive> 
+				</section>
+
+				<section>
+					<ul>
+						<li>
+							Datasette Plugins:
+							<ul>
+								<li>
+									<span style="color: firebrick">datasette-vega</span>
+									-- A Datasette plugin that provides tools for generating charts using Vega
+								</li>
+							</ul>
+						</li>						
+					</ul>
+				</section>
+
+				<section
+					data-background="white"
+					data-background-iframe="https://collection-analysis.cincy.pl/current_collection?sql=--+group+titles+(bib+records)+by+the+decade+in+which+they+were+published%0D%0Aselect%0D%0A++cast(round(publish_year+%2F+10%2C+1)+*+10+as+integer)+AS+decade%2C%0D%0A++count(*)+AS+count_titles%0D%0Afrom%0D%0A++bib%0D%0Awhere%0D%0A++publish_year+>%3D+1800%0D%0A++AND+publish_year+<%3D+2021%0D%0Agroup+by%0D%0A++decade%0D%0Aorder+by%0D%0A++decade"
+					data-background-interactive>
+				</section>
+
+				<section>
+					<ul>
+						<li>
+							Datasette Plugins:
+							<ul>
+								<li>
+									<span style="color: firebrick">datasette-cluster-map</span>
+									-- detects tables with latitude and longitude columns and then plots them on a map using Leaflet.markercluster
+								</li>
+							</ul>
+						</li>						
+					</ul>
+				</section>
+
+				<section
+					data-background="white"
+					data-background-iframe="https://collection-analysis.cincy.pl/current_collection/branch_locations"
+					data-background-interactive>
+				</section>
+
+				<section
+					data-background="white"
+					data-background-iframe="https://collection-analysis.cincy.pl/current_collection?sql=--+which+branch+locations+have+Leased+DVD+items+...%0D%0Aselect%0D%0A++location_code%2C%0D%0A++is_public%2C%0D%0A++is_requestable%2C%0D%0A++location_name%2C%0D%0A++branch_name%2C%0D%0A++branch_locations.address%2C%0D%0A++branch_locations.latitude%2C%0D%0A++branch_locations.longitude%0D%0Afrom%0D%0A++location_view%0D%0A++join+branch_locations+on+branch_locations.code_num+%3D+location_view.branch_code_num%0D%0Awhere%0D%0A++location_code+in+(%0D%0A++++select%0D%0A++++++distinct+location_code%0D%0A++++from%0D%0A++++++item%0D%0A++++where%0D%0A++++++item_format+%3D+'Leased+DVD'%0D%0A++)"
+					data-background-interactive>
+				</section>
+
+				<section>
+					<p>
+						Named parameters: Datasette provides a nice interface when a named parameter is placed within a SQL query
+					</p>
+					
+				</section>
+
+				<section>
+					<pre>
+						<code class="sql" data-trim data-line-numbers="7">
+where
+(
+  select
+  value
+  from
+  json_each(bib.indexed_subjects)
+) like '%' || :subject_like || '%'
+						</code>
+					</pre>			
+				</section>
+
+				<section
+					data-background="white"
+					data-background-iframe="https://collection-analysis.cincy.pl/current_collection?sql=--+find+titles+with+indexed+subject+sorted+by+top+circulating%0D%0Aselect%0D%0A++(%0D%0A++++select%0D%0A++++++sum(checkout_total)%0D%0A++++from%0D%0A++++++item%0D%0A++++where%0D%0A++++++item.bib_record_num+%3D+bib.bib_record_num%0D%0A++)+as+total_checkouts%2C%0D%0A++'https%3A%2F%2Fcincinnatilibrary.bibliocommons.com%2Fitem%2Fshow%2F'+||+bib.bib_record_num+||+'170'+as+catalog_link%2C%0D%0A++best_author%2C%0D%0A++best_title%2C%0D%0A++publisher%2C%0D%0A++publish_year%2C%0D%0A++bib_level_callnumber%2C%0D%0A++indexed_subjects%0D%0Afrom%0D%0A++bib%0D%0Awhere%0D%0A++(%0D%0A++++select%0D%0A++++++value%0D%0A++++from%0D%0A++++++json_each([bib].[indexed_subjects])%0D%0A++)+like+'%25'+||+%3Asubject_like+||+'%25'%0D%0Aorder+by%0D%0A++total_checkouts+desc&subject_like=dystopia"
+					data-background-interactive>
+				</section>
+				
+				<section>
+					<h3>Canned Queries</h3>
+					<ul>
+						<li>
+							Create something that looks more like a traditional REST API 
+						</li>
+					</ul>
+					<pre>
+						<code class="python" data-trim>
+# Datasette URI construction
+scheme = "https://"
+host = "collection-analysis.cincy.pl"
+# path contains the name of the database
+path = "/current_collection"
+# this is either a table, view, or canned query  
+canned_query_path = "/item_view"
+response_format = '' # '' or '.csv' or '.json'
+query_parameter = "?barcode__exact="
+query_parameter_value = "A000036107985"
+
+full_request_uri = scheme + host \
+    + path + canned_query_path + response_format \
+    + query_parameter + query_parameter_value
+						</code>
+					</pre>
+					
+				</section>
+
+				<section
+					data-background="white"
+					data-background-iframe="https://collection-analysis.cincy.pl/current_collection/item_view?barcode__exact=A000036107985"
+					data-background-interactive>
+				</section>
+
+				<section
+					data-background="white"
+					data-background-iframe="https://collection-analysis.cincy.pl/current_collection-5863793/item_view.json?barcode__exact=A000036107985&_shape=array"
+					data-background-interactive>
+				</section>
+
+				<section>
+					<h3 style="text-transform: none;">Using Datasette as a Data-source</h3>
+					<img src="./img/google_colab_and_datasette.png">
+				</section>
+
+				<section>
+					<h3 style="text-transform: none;">Using Datasette as a Data-source</h3>
+					<a href="https://github.com/cincinnatilibrary/collection-analysis/blob/2eda15df6c469b13309bac9625088158baed13bf/reports/colab_datasette_example.ipynb">
+						https://github.com/ ... /reports/colab_datasette_example.ipynb
+					</a>
+				</section>
+				
+				<section data-background="white">
+					<img src='img/iug_connections_crop.jpg' style="height: 150px; margin: 0 auto auto auto; background: transparent;">
+					<img class="r-stretch" style="height: 300px; margin: 0 auto auto auto;" src="img/CHPL_Brandmark_Primary.png">
+					<!-- <img width="250" src='img/ohiug-logo.png'>
+					<img width="250" src="img/chpl_logo.png"> -->										
+						<p>
+							Thanks, and <u><span class="font-container" style="font-family: 'MADFONT'; font-weight: normal; font-style: normal; color: #ea454b;" >PLEASE</span></u>, let me know if you come up with any cool queries, ❤️ Datasette as much as I do, or want to use this at your library!
+						</p>
+
+						<p>
+							Ray Voelker<br/>
+							ray.voelker@gmail.com<br/>
+							ray.voelker@cincinnatilibrary.org<br />
+							
+							<!-- style="height: 200px; margin: 0 auto auto auto; background: transparent;" -->
+						</p>
+				</section>
+
+		</div>
+
+		<script src="dist/reveal.js"></script>
+		<script src="plugin/notes/notes.js"></script>
+		<script src="plugin/markdown/markdown.js"></script>
+		<script src="plugin/highlight/highlight.js"></script>
+		<script>
+			// More info about initialization & config:
+			// - https://revealjs.com/initialization/
+			// - https://revealjs.com/config/
+			Reveal.initialize({
+				hash: true,
+				
+				// Learn about plugins: https://revealjs.com/plugins/
+				plugins: [ RevealMarkdown, RevealHighlight, RevealNotes ]
+			});
+			Reveal.configure({ pdfSeparateFragments: false });
+		</script>
+	</body>
+</html>

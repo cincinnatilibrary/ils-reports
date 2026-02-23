@@ -1,0 +1,9 @@
+@font-face {
+    font-family: 'MADFONT';
+    src: url('MADFONT.woff2') format('woff2'),
+        url('MADFONT.woff') format('woff');
+    font-weight: normal;
+    font-style: normal;
+    font-display: swap;
+}
+
