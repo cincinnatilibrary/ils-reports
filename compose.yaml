@@ -1,0 +1,31 @@
+# compose.yaml — local dev for the CHPL Datasette container
+#
+# Usage:
+#   docker compose up --build          # build image and start
+#   docker compose up                  # start without rebuilding
+#   docker compose down                # stop and remove container
+#
+# The database is NOT baked into the image.  Point DB_PATH at a SQLite
+# file on your host (default: ./test.db).  Create a test DB first if you
+# don't have one:
+#
+#   uv run python scripts/create-test-db.py test.db
+#   DB_PATH=./test.db docker compose up --build
+#
+# Templates and static files are bind-mounted so edits take effect on
+# browser refresh without rebuilding the image.
+#
+# Open: http://localhost:8001
+
+services:
+  datasette:
+    build:
+      context: datasette/
+    # host networking sidesteps Podman CNI plugin version conflicts on Linux
+    network_mode: host
+    volumes:
+      # Database — read-only; updated nightly by the pipeline on the host
+      - "${DB_PATH:-./test.db}:/data/current_collection.db:ro"
+      # Live-mount for template/CSS/JS editing without a rebuild
+      - "./datasette/templates:/app/templates:ro"
+      - "./datasette/static:/app/static:ro"
