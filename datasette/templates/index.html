@@ -1,0 +1,78 @@
+{#
+  index.html — CHPL ILS-Reports homepage
+  Written against: Datasette 1.0a24
+#}
+{% extends "default:index.html" %}
+
+{% block content %}
+<div class="chpl-hero">
+  <div class="chpl-hero-inner">
+    <img src="/static/CHPL_Brandmark_OneColorNavy.svg"
+         alt="Cincinnati &amp; Hamilton County Public Library"
+         class="chpl-hero-logo"
+         width="80">
+    <h1>ILS-Reports</h1>
+    <p>
+      Open data from the
+      <a href="https://www.chpl.org/">Cincinnati &amp; Hamilton County Public Library</a>
+      integrated library system — rebuilt nightly from Sierra.
+    </p>
+  </div>
+</div>
+
+<div class="chpl-page-cards">
+  <a href="{{ urls.database('current_collection') }}" class="chpl-page-card card">
+    <div class="chpl-page-card-preview">
+      <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24"
+           fill="none" stroke="currentColor" stroke-width="1.5"
+           stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>
+        <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
+      </svg>
+    </div>
+    <div class="chpl-page-card-body">
+      <h2 class="chpl-page-card-title">Current Collection</h2>
+      <p class="chpl-page-card-desc">
+        Browse bibliographic records, items, active holds, and circulation statistics.
+      </p>
+    </div>
+  </a>
+
+  <a href="#" class="chpl-page-card card">
+    <div class="chpl-page-card-preview">
+      <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24"
+           fill="none" stroke="currentColor" stroke-width="1.5"
+           stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+        <path d="M14 2v6h6"/>
+        <path d="M16 13H8"/>
+        <path d="M16 17H8"/>
+      </svg>
+    </div>
+    <div class="chpl-page-card-body">
+      <h2 class="chpl-page-card-title">Documentation</h2>
+      <p class="chpl-page-card-desc">
+        Data dictionary, pipeline architecture, table schemas, and field definitions.
+      </p>
+    </div>
+  </a>
+
+  <a href="/reports" class="chpl-page-card card">
+    <div class="chpl-page-card-preview">
+      <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24"
+           fill="none" stroke="currentColor" stroke-width="1.5"
+           stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <line x1="18" y1="20" x2="18" y2="10"/>
+        <line x1="12" y1="20" x2="12" y2="4"/>
+        <line x1="6" y1="20" x2="6" y2="14"/>
+      </svg>
+    </div>
+    <div class="chpl-page-card-body">
+      <h2 class="chpl-page-card-title">Reports</h2>
+      <p class="chpl-page-card-desc">
+        Curated queries: items by branch, top holds, most-circulated titles, and more.
+      </p>
+    </div>
+  </a>
+</div>
+{% endblock content %}

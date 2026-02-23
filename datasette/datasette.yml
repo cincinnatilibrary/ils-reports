@@ -1,0 +1,16 @@
+extra_css_urls:
+  - /static/chpl-variables.css
+  - /static/chpl-base.css
+
+extra_js_urls:
+  - /static/theme.js
+
+settings:
+  default_page_size: 100
+  max_returned_rows: 10000
+  sql_time_limit_ms: 10000
+  allow_download: true
+  allow_signed_tokens: false
+  default_allow_sql: true
+  force_https_urls: true
+  num_sql_threads: 3

@@ -1,0 +1,139 @@
+title: CHPL Collection Analysis
+description_html: |-
+  <p>
+    A nightly snapshot of the
+    <a href="https://www.chpl.org/">Cincinnati &amp; Hamilton County Public Library</a>
+    physical collection, extracted from the Sierra ILS.
+    Rebuilt every night from scratch — data is current as of the previous evening.
+  </p>
+  <p>
+    Source code:
+    <a href="https://github.com/cincinnatilibrary/ils-reports">cincinnatilibrary/ils-reports</a>
+  </p>
+
+license: CC-BY-4.0
+license_url: https://creativecommons.org/licenses/by/4.0/
+
+source: Cincinnati & Hamilton County Public Library Sierra ILS
+source_url: https://www.chpl.org/
+
+databases:
+  current_collection:
+    title: CHPL Collection
+    description: Bibliographic records, items, holds, and circulation statistics.
+
+    tables:
+      item:
+        description: Physical items in the collection — one row per barcode.
+        columns:
+          item_record_id: Sierra internal item record ID
+          item_record_num: Human-readable item number
+          bib_record_id: Parent bibliographic record ID
+          bib_record_num: Human-readable bib number
+          creation_date: Date the item record was created in Sierra
+          record_last_updated: Date the item record was last modified
+          barcode: Item barcode
+          location_code: Branch/location code (e.g. "mapl " for Main Library)
+          checkout_date: Date of current checkout (empty if available)
+          due_date: Due date of current checkout
+          patron_branch_code: Home branch of current borrower
+          last_checkout_date: Date of most recent checkout
+          last_checkin_date: Date of most recent checkin
+          checkout_total: Total lifetime checkouts
+          renewal_total: Total lifetime renewals
+          isbn: ISBN from parent bib record
+          item_format: Format name (Book, DVD, Audiobook, etc.)
+          item_status_code: "Sierra status code: - available, o checked out, t in transit, ! on holdshelf"
+          price: Item list price
+          item_callnumber: Normalized call number
+
+      bib:
+        description: Bibliographic records — one row per title.
+        columns:
+          bib_record_id: Sierra internal bib record ID
+          bib_record_num: Human-readable bib number
+          control_numbers: Comma-separated OCLC and other control numbers
+          isbn: Primary ISBN (10 or 13 digit)
+          best_author: Sierra normalized author string
+          best_title: Sierra display title
+          publisher: Publisher name from MARC 260$b
+          publish_year: Year of publication
+          bib_level_callnumber: Normalized call number on the bib record
+          indexed_subjects: Comma-separated subject headings
+
+      hold:
+        description: Active bib-level holds — one row per title with holds.
+        columns:
+          bib_record_id: FK to bib record
+          bib_record_num: Human-readable bib number
+          holds: Semicolon-delimited hold detail strings (Sierra API format)
+
+      bib_record_item_record_link:
+        description: Many-to-many link between bib records and item records.
+        columns:
+          bib_record_id: FK to bib record
+          item_record_id: FK to item record
+
+    canned_queries:
+      items_by_branch:
+        title: Items by Branch
+        sql: |-
+          SELECT
+            location_code,
+            COUNT(*) AS item_count
+          FROM item
+          GROUP BY location_code
+          ORDER BY item_count DESC
+
+      top_holds:
+        title: Titles with Most Active Holds
+        sql: |-
+          SELECT
+            b.best_title,
+            b.best_author,
+            b.publish_year,
+            length(h.holds) - length(replace(h.holds, ';', '')) + 1 AS hold_count
+          FROM hold AS h
+          JOIN bib AS b ON b.bib_record_id = h.bib_record_id
+          ORDER BY hold_count DESC
+          LIMIT 50
+
+      most_checked_out:
+        title: Most Checked-Out Items (All Time)
+        sql: |-
+          SELECT
+            b.best_title,
+            b.best_author,
+            i.location_code,
+            i.item_format,
+            i.checkout_total
+          FROM item AS i
+          JOIN bib AS b ON b.bib_record_id = i.bib_record_id
+          ORDER BY i.checkout_total DESC
+          LIMIT 100
+
+      available_items_by_format:
+        title: Available Items by Format
+        sql: |-
+          SELECT
+            item_format,
+            COUNT(*) AS available_count
+          FROM item
+          WHERE item_status_code = '-'
+          GROUP BY item_format
+          ORDER BY available_count DESC
+
+      recently_added:
+        title: Recently Added Items (Last 30 Days)
+        sql: |-
+          SELECT
+            b.best_title,
+            b.best_author,
+            i.item_format,
+            i.location_code,
+            i.creation_date
+          FROM item AS i
+          JOIN bib AS b ON b.bib_record_id = i.bib_record_id
+          WHERE i.creation_date >= date('now', '-30 days')
+          ORDER BY i.creation_date DESC
+          LIMIT 200

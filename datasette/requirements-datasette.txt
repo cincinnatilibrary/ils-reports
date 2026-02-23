@@ -1,0 +1,2 @@
+datasette==1.0a24
+datasette-leaflet>=0.2
