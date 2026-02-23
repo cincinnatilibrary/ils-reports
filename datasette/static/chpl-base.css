@@ -1,0 +1,569 @@
+/*
+ * chpl-base.css — CHPL Datasette Layout & Components
+ *
+ * Applies semantic tokens from chpl-variables.css to Datasette's HTML
+ * structure and defines CHPL-specific UI components. Requires
+ * chpl-variables.css to be loaded first.
+ *
+ * Written against: Datasette 1.0a24
+ * Datasette header element: <header class="hd"> — NOT .nav
+ * Datasette footer element: <footer class="ft">
+ *
+ * Typography note: BrownStd (Lineto) is the licensed CHPL brand typeface
+ * but is not available as a web font. Arial is the brand-sanctioned
+ * digital alternate per the 2020 CHPL Brand Guidelines, page 22.
+ *
+ * Logo usage: CHPL_Brandmark_OneColorNavy.svg + brightness(0) invert(1)
+ * produces a clean white-on-navy mark. Per brand guidelines (p.16),
+ * one-color alternates are sanctioned for color-limitation contexts such
+ * as a fixed-navy nav bar. The full-color Primary mark (colored dots) may
+ * NOT be placed on any background other than white, cream, or navy (p.20),
+ * and its colors must not be altered — so CSS-inverting it is not allowed.
+ *
+ * Header background: always --chpl-navy regardless of dark/light mode.
+ * The branded header color is fixed per identity guidelines; only the
+ * page body switches between light and dark.
+ */
+
+/* ── Global ───────────────────────────────────────────────────────────── */
+body {
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  font-family: var(--font-sans);
+  transition: background-color var(--transition-normal), color var(--transition-normal);
+}
+
+a {
+  color: var(--text-link);
+}
+
+a:hover {
+  color: var(--text-link-hover);
+}
+
+/* ── Index page: full-bleed hero — hide nav bar, remove content margins ─ */
+body.index .crumbs {
+  display: none;
+}
+
+body.index .hd {
+  display: none;
+}
+
+body.index section.content {
+  margin: 0;
+}
+
+/* ── Datasette header (.hd) ──────────────────────────────────────────── */
+/* Always navy — brand header color does not flip with dark/light mode.  */
+.hd {
+  background-color: var(--chpl-navy);
+  color: var(--chpl-white);
+}
+
+.hd nav {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  padding: 0.4rem 1rem;
+  gap: 0.5rem;
+}
+
+.hd a,
+.hd a:visited {
+  color: var(--chpl-white);
+  opacity: 0.9;
+  text-decoration: none;
+}
+
+.hd a:hover {
+  opacity: 1;
+  text-decoration: underline;
+}
+
+/* ── CHPL logo + site title (injected into {% block crumbs %}) ────────── */
+.chpl-nav-inner {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-shrink: 0;
+  margin-right: 0.75rem;
+}
+
+.chpl-logo-link {
+  display: flex;
+  align-items: center;
+  opacity: 1 !important;
+  text-decoration: none !important;
+}
+
+/* OneColorNavy SVG inverted to white on the navy header.               */
+/* Per brand guidelines p.16: one-color alternates are sanctioned for   */
+/* color-limitation contexts such as this fixed-navy nav bar.           */
+.chpl-logo {
+  height: 40px;
+  width: auto;
+  min-width: 72px; /* CHPL minimum logo width per brand guidelines */
+  filter: brightness(0) invert(1);
+}
+
+.chpl-site-title {
+  font-weight: bold;
+  font-size: 1rem;
+  color: var(--chpl-white);
+  white-space: nowrap;
+}
+
+/* ── Theme toggle button ──────────────────────────────────────────────── */
+/* Always on navy header, so always use white/transparent border style. */
+.chpl-theme-toggle {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.35rem;
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: var(--radius-sm);
+  color: var(--chpl-white);
+  cursor: pointer;
+  line-height: 1;
+  transition: background-color var(--transition-fast), border-color var(--transition-fast);
+}
+
+.chpl-theme-toggle:hover {
+  background: rgba(255, 255, 255, 0.15);
+  border-color: rgba(255, 255, 255, 0.5);
+}
+
+/* Moon icon: shown in light mode; Sun icon: shown in dark mode */
+.chpl-theme-toggle .chpl-theme-icon-sun { display: none; }
+.chpl-theme-toggle .chpl-theme-icon-moon { display: block; }
+
+[data-theme="dark"] .chpl-theme-toggle .chpl-theme-icon-sun,
+.dark .chpl-theme-toggle .chpl-theme-icon-sun { display: block; }
+
+[data-theme="dark"] .chpl-theme-toggle .chpl-theme-icon-moon,
+.dark .chpl-theme-toggle .chpl-theme-icon-moon { display: none; }
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]):not(.light) .chpl-theme-toggle .chpl-theme-icon-sun { display: block; }
+  :root:not([data-theme="light"]):not(.light) .chpl-theme-toggle .chpl-theme-icon-moon { display: none; }
+}
+
+/* ── Table styling ───────────────────────────────────────────────────── */
+thead th {
+  background-color: var(--chpl-navy);
+  color: var(--chpl-white);
+}
+
+tbody tr:hover {
+  background-color: color-mix(in srgb, var(--chpl-teal) 10%, transparent);
+}
+
+/* ── Cards ───────────────────────────────────────────────────────────── */
+.card {
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+  margin-bottom: var(--space-4);
+  transition: box-shadow var(--transition-fast);
+}
+
+.card:hover {
+  box-shadow: var(--shadow-md);
+}
+
+.card-body {
+  padding: var(--space-4) var(--space-6);
+}
+
+/* ── Badges ──────────────────────────────────────────────────────────── */
+.badge {
+  display: inline-block;
+  padding: 0.15em 0.45em;
+  font-size: var(--text-xs);
+  font-weight: var(--font-semibold);
+  line-height: 1.4;
+  border-radius: var(--radius-full);
+  background: var(--bg-tertiary);
+  color: var(--text-muted);
+  white-space: nowrap;
+  vertical-align: middle;
+}
+
+/* ── Homepage: database heading ──────────────────────────────────────── */
+.chpl-db-heading {
+  padding-left: 10px;
+  border-left: 8px solid var(--chpl-teal);
+  margin-top: 0;
+  margin-bottom: var(--space-3);
+}
+
+.chpl-db-heading a {
+  color: var(--text-primary);
+}
+
+.chpl-db-meta {
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+  margin: 0 0 var(--space-3);
+}
+
+.chpl-db-tables {
+  font-size: var(--text-sm);
+  line-height: var(--leading-relaxed);
+}
+
+/* ── Homepage hero ───────────────────────────────────────────────────── */
+/* Full-width navy gradient, centered text — matches chimpy-say splash.  */
+.chpl-hero {
+  background: linear-gradient(135deg, var(--chpl-navy) 0%, var(--chpl-navy-light) 100%);
+  color: var(--chpl-cream);
+  padding: var(--space-16) var(--space-6);
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+  margin-bottom: var(--space-8);
+}
+
+/* Decorative dashed circles — brand visual element from CHPL guidelines */
+.chpl-hero::before,
+.chpl-hero::after {
+  content: "";
+  position: absolute;
+  border-radius: 50%;
+  border: 2px dashed rgba(0, 146, 189, 0.35);
+  pointer-events: none;
+}
+
+.chpl-hero::before {
+  width: 420px;
+  height: 420px;
+  top: -120px;
+  right: -80px;
+}
+
+.chpl-hero::after {
+  width: 300px;
+  height: 300px;
+  bottom: -90px;
+  left: -70px;
+}
+
+/* Inner container constrains text width while circles span full bleed */
+.chpl-hero-inner {
+  max-width: 600px;
+  margin: 0 auto;
+  position: relative;
+  z-index: 1;
+}
+
+.chpl-hero h1 {
+  margin: 0 0 var(--space-4);
+  font-size: var(--text-4xl);
+  color: var(--chpl-cream);
+  line-height: var(--leading-tight);
+}
+
+.chpl-hero p {
+  margin: 0 0 var(--space-3);
+  color: rgba(246, 241, 235, 0.88);
+  font-size: var(--text-base);
+  line-height: var(--leading-relaxed);
+}
+
+.chpl-hero a {
+  color: var(--chpl-blue-light);
+}
+
+.chpl-hero a:hover {
+  color: #a0d8ef;
+}
+
+.chpl-freshness {
+  display: block;
+  margin-top: var(--space-4);
+  font-size: var(--text-sm);
+  color: rgba(246, 241, 235, 0.65);
+}
+
+/* ── Datasette page elements ──────────────────────────────────────────── */
+
+/* Data grid */
+table.rows-and-columns {
+  border-collapse: collapse;
+  width: 100%;
+}
+
+table.rows-and-columns th,
+table.rows-and-columns td {
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--border-light);
+  text-align: left;
+  vertical-align: top;
+}
+
+/* Pagination */
+nav.pagination {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin: var(--space-4) 0;
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+}
+
+nav.pagination a {
+  color: var(--text-link);
+  text-decoration: none;
+  padding: var(--space-1) var(--space-2);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-sm);
+  background: var(--bg-elevated);
+}
+
+nav.pagination a:hover {
+  background: var(--bg-tertiary);
+  color: var(--text-link-hover);
+}
+
+/* Export links */
+.export-links {
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+  margin: var(--space-3) 0;
+}
+
+/* Filter form */
+.filters {
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-md);
+  padding: var(--space-3) var(--space-4);
+  margin-bottom: var(--space-4);
+}
+
+.filter-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  margin-bottom: var(--space-2);
+}
+
+/* SQL query editor */
+textarea.query {
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-md);
+  padding: var(--space-3);
+  color: var(--text-primary);
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  width: 100%;
+  resize: vertical;
+}
+
+/* Flash message banners */
+.message-info,
+.message-warning,
+.message-error {
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-md);
+  margin-bottom: var(--space-4);
+  border: 1px solid transparent;
+  font-size: var(--text-sm);
+}
+
+.message-info {
+  background: var(--status-info-bg);
+  border-color: var(--status-info);
+  color: var(--text-primary);
+}
+
+.message-warning {
+  background: var(--status-warning-bg);
+  border-color: var(--status-warning);
+  color: var(--text-primary);
+}
+
+.message-error {
+  background: var(--status-error-bg);
+  border-color: var(--status-error);
+  color: var(--text-primary);
+}
+
+/* ── Datasette footer (.ft) ──────────────────────────────────────────── */
+.ft {
+  border-top: 2px solid var(--border-medium);
+  background: var(--bg-primary);
+  padding: 1rem;
+  margin-top: 2rem;
+  text-align: center;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  transition: background-color var(--transition-normal), color var(--transition-normal);
+}
+
+.ft a {
+  color: var(--text-link);
+}
+
+/* ── Hero logo (index page) ──────────────────────────────────────────── */
+.chpl-hero-logo {
+  width: 160px;
+  height: auto;
+  margin: 0 auto var(--space-6);
+  display: block;
+  filter: brightness(0) invert(1);
+}
+
+/* ── Hub cards grid ───────────────────────────────────────────────────── */
+.chpl-hub-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-6);
+  max-width: var(--container-lg);
+  margin: var(--space-8) auto;
+  padding: 0 var(--space-6);
+}
+
+@media (max-width: 640px) {
+  .chpl-hub-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.chpl-hub-card {
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
+  padding: var(--space-6);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  text-decoration: none;
+  color: inherit;
+  transition: box-shadow var(--transition-fast), border-color var(--transition-fast);
+}
+
+.chpl-hub-card:hover {
+  box-shadow: var(--shadow-md);
+  border-color: var(--chpl-teal);
+  color: inherit;
+}
+
+.chpl-hub-card-icon {
+  color: var(--chpl-teal);
+  line-height: 1;
+}
+
+.chpl-hub-card-title {
+  font-size: var(--text-xl);
+  font-weight: var(--font-bold);
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.chpl-hub-card-desc {
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+  line-height: var(--leading-relaxed);
+  flex: 1;
+  margin: 0;
+}
+
+.chpl-hub-card-action {
+  font-size: var(--text-sm);
+  font-weight: var(--font-semibold);
+  color: var(--text-link);
+  margin-top: auto;
+}
+
+/* ── Page content wrapper ─────────────────────────────────────────────── */
+.chpl-page-wrap {
+  max-width: var(--container-lg);
+  margin: var(--space-8) auto;
+  padding: 0 var(--space-6);
+}
+
+.chpl-page-wrap h1 {
+  margin-bottom: var(--space-2);
+}
+
+.chpl-page-wrap > p:first-of-type {
+  color: var(--text-muted);
+  margin-bottom: var(--space-8);
+}
+
+.chpl-hub-grid--flush {
+  margin: 0;
+  padding: 0;
+}
+
+/* ── Page cards (chimpy-say style) ───────────────────────────────────── */
+.chpl-page-cards {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-6);
+  max-width: var(--container-lg);
+  margin: var(--space-8) auto;
+  padding: 0 var(--space-6);
+}
+
+@media (max-width: 768px) {
+  .chpl-page-cards {
+    grid-template-columns: 1fr;
+  }
+}
+
+.chpl-page-cards--flush {
+  margin: 0;
+  padding: 0;
+}
+
+.chpl-page-card {
+  display: block;
+  color: inherit;
+  text-decoration: none;
+  transition: transform var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.chpl-page-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-lg);
+  text-decoration: none;
+  color: inherit;
+}
+
+.chpl-page-card-preview {
+  height: 160px;
+  background: linear-gradient(135deg, var(--bg-tertiary) 0%, var(--bg-sunken) 100%);
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-muted);
+}
+
+.chpl-page-card-body {
+  padding: var(--space-4) var(--space-5);
+}
+
+.chpl-page-card-title {
+  font-size: var(--text-base);
+  font-weight: var(--font-semibold);
+  color: var(--text-primary);
+  margin: 0 0 var(--space-1);
+}
+
+.chpl-page-card-desc {
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+  margin: 0;
+}
