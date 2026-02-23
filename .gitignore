@@ -1,0 +1,30 @@
+# Credentials and local config
+config.json
+
+# SQLite databases
+*.db
+*.db-shm
+*.db-wal
+*.db.new
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+dist/
+build/
+.venv/
+venv/
+*.egg
+
+# Jupyter
+.ipynb_checkpoints/
+output.ipynb
+output.html
+
+# Logs
+*.log
+logs/
+
+# OS
+.DS_Store

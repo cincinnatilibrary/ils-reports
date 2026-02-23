@@ -1,0 +1,5 @@
+# Core pipeline dependencies only (no Jupyter/Papermill needed)
+SQLAlchemy==1.4.32
+psycopg2-binary==2.9.3
+sqlite-utils==3.25.1
+sqlite-fts4==1.0.1

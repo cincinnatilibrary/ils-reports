@@ -1,0 +1,18 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.backends.legacy:build"
+
+[project]
+name = "ils-reports"
+version = "0.1.0"
+description = "Data pipelines from Sierra ILS (PostgreSQL) to SQLite for reporting and analysis"
+requires-python = ">=3.8"
+dependencies = [
+    "SQLAlchemy==1.4.32",
+    "psycopg2-binary==2.9.3",
+    "sqlite-utils==3.25.1",
+    "sqlite-fts4==1.0.1",
+]
+
+[project.scripts]
+collection-analysis = "collection_analysis.run:main"

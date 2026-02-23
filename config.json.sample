@@ -1,0 +1,10 @@
+{
+    "pg_host": "sierra-db.plch.net",
+    "pg_port": 1032,
+    "pg_dbname": "iii",
+    "pg_username": "USERNAME",
+    "pg_password": "PASSWORD",
+    "pg_sslmode": "require",
+    "pg_itersize": 5000,
+    "output_dir": "/path/to/output/"
+}
