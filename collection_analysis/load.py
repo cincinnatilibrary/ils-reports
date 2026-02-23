@@ -3,7 +3,7 @@ load.py — Write extracted data into a SQLite database with optimized settings.
 
 Handles:
   - Opening a SQLite connection with build-time PRAGMAs for maximum write speed
-  - Bulk-inserting rows using sqlite-utils
+  - Bulk-inserting rows (executemany with plain sqlite3)
   - Deferring index creation until all tables are loaded
   - Building to a temp file (*.db.new) and atomically swapping on completion
 
@@ -19,9 +19,8 @@ TODO: Port loading logic from reference/collection-analysis.cincy.pl_gen_db.ipyn
 
 import logging
 import os
+import sqlite3
 from pathlib import Path
-
-import sqlite_utils
 
 logger = logging.getLogger(__name__)
 
@@ -53,18 +52,18 @@ def final_path(output_dir: str, db_name: str = "current_collection.db") -> Path:
     return Path(output_dir) / db_name
 
 
-def open_build_db(output_dir: str, db_name: str = "current_collection.db") -> sqlite_utils.Database:
+def open_build_db(output_dir: str, db_name: str = "current_collection.db") -> sqlite3.Connection:
     """Open (or create) the temp build database and apply fast-write PRAGMAs."""
     path = build_path(output_dir, db_name)
     path.parent.mkdir(parents=True, exist_ok=True)
-    db = sqlite_utils.Database(path)
+    db = sqlite3.connect(path)
     for pragma, value in BUILD_PRAGMAS.items():
         db.execute(f"PRAGMA {pragma} = {value}")
     logger.info(f"Opened build database: {path}")
     return db
 
 
-def finalize_db(db: sqlite_utils.Database) -> None:
+def finalize_db(db: sqlite3.Connection) -> None:
     """Run ANALYZE and re-apply safe PRAGMAs before swapping."""
     logger.info("Running ANALYZE ...")
     db.execute("ANALYZE")

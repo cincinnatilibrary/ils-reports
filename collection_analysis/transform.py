@@ -16,26 +16,25 @@ TODO: Extract view and index SQL from reference/collection-analysis.cincy.pl_gen
 """
 
 import logging
+import sqlite3
 from pathlib import Path
-
-import sqlite_utils
 
 logger = logging.getLogger(__name__)
 
 SQL_DIR = Path(__file__).parent.parent / "sql"
 
 
-def create_views(db: sqlite_utils.Database) -> None:
+def create_views(db: sqlite3.Connection, sql_dir=None) -> None:
     """Execute all .sql files in sql/views/ against the database."""
-    _execute_sql_dir(db, SQL_DIR / "views")
+    _execute_sql_dir(db, (Path(sql_dir) if sql_dir else SQL_DIR) / "views")
 
 
-def create_indexes(db: sqlite_utils.Database) -> None:
+def create_indexes(db: sqlite3.Connection, sql_dir=None) -> None:
     """Execute all .sql files in sql/indexes/ against the database."""
-    _execute_sql_dir(db, SQL_DIR / "indexes")
+    _execute_sql_dir(db, (Path(sql_dir) if sql_dir else SQL_DIR) / "indexes")
 
 
-def _execute_sql_dir(db: sqlite_utils.Database, directory: Path) -> None:
+def _execute_sql_dir(db: sqlite3.Connection, directory: Path) -> None:
     sql_files = sorted(directory.glob("*.sql"))
     if not sql_files:
         logger.warning(f"No .sql files found in {directory}")
