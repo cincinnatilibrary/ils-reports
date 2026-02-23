@@ -17,9 +17,8 @@ served publicly via Datasette at https://collection-analysis.cincy.pl/
 ```bash
 git clone <this repo>
 cd ils-reports
-python -m venv venv
-source venv/bin/activate
-pip install -r requirements.txt
+uv sync --all-extras       # creates .venv, installs all deps
+uv run pre-commit install  # install git hooks
 
 cp config.json.sample config.json
 # edit config.json with your Sierra credentials and output path
@@ -28,9 +27,9 @@ cp config.json.sample config.json
 ## Running the pipeline
 
 ```bash
-python -m collection_analysis.run
+uv run python -m collection_analysis.run
 # or, with a non-default config location:
-python -m collection_analysis.run --config /path/to/config.json
+uv run python -m collection_analysis.run --config /path/to/config.json
 ```
 
 ## Project structure
@@ -41,12 +40,13 @@ ils-reports/
 ├── sql/
 │   ├── views/             One .sql file per SQLite view
 │   └── indexes/           One .sql file per index group
-├── docs/
-│   └── data_dictionary.md Table and view documentation
+├── docs/                  MkDocs documentation
+├── datasette/             Datasette config + Fly.io deployment
+├── tests/                 pytest unit and integration tests
 ├── reference/             Original notebook and scripts (read-only reference)
 ├── config.json.sample     Config template (copy to config.json)
-├── requirements.txt
-└── pyproject.toml
+├── pyproject.toml
+└── uv.lock
 ```
 
 ## Related repos

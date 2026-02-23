@@ -1,0 +1,36 @@
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.6.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-yaml
+      - id: check-json
+      - id: mixed-line-ending
+        args: ["--fix=lf"]
+
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.4.7
+    hooks:
+      - id: ruff
+        args: ["--fix"]
+      - id: ruff-format
+
+  - repo: https://github.com/sqlfluff/sqlfluff
+    rev: 2.3.5
+    hooks:
+      - id: sqlfluff-lint
+        files: "^sql/"
+      - id: sqlfluff-fix
+        files: "^sql/"
+        args: ["--force"]
+
+  - repo: local
+    hooks:
+      - id: djlint
+        name: djlint
+        language: system
+        entry: uv run djlint
+        args: ["--lint"]
+        files: "^datasette/templates/.*\\.html$"
+        types: [html]
