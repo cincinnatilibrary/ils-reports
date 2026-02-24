@@ -4,6 +4,10 @@
 extracted from Sierra. This page provides a high-level overview; detailed
 column documentation is in the sub-pages.
 
+The pipeline also writes a second database, `pipeline_runs.db`, to the same
+`output_dir`. It accumulates performance history across every run and is never
+wiped. See [Pipeline metadata databases](#pipeline-metadata-databases) below.
+
 ---
 
 ## Base Tables (extracted from Sierra)
@@ -67,3 +71,41 @@ Notable views:
 | `branch_30_day_circ_view` | Recent checkouts by branch |
 | `last_copy_view` | Last remaining copy per bib |
 | `active_holds_view` | Currently active, unfrozen holds |
+
+---
+
+## Pipeline metadata databases
+
+### `_pipeline_run` (table in `current_collection.db`)
+
+Written at the end of every successful build. Lets Datasette users see when
+and how the current snapshot was produced.
+
+| Column | Description |
+|---|---|
+| `run_started` | ISO timestamp when the pipeline run began |
+| `stage` | Stage or table name |
+| `rows` | Rows loaded (NULL for non-extraction stages) |
+| `elapsed_seconds` | Wall-clock seconds for this stage |
+| `rows_per_sec` | Throughput (NULL for non-extraction stages) |
+
+### `pipeline_runs.db` (persistent, in `output_dir`)
+
+A separate SQLite database that is **never** deleted or replaced. It
+accumulates one row in `run` and one row per stage in `stage` for every
+pipeline execution, including failed runs.
+
+| Table/View | Description |
+|---|---|
+| `run` | One row per pipeline execution: start time, end time, elapsed, success flag |
+| `stage` | One row per stage per run: rows loaded, elapsed seconds, rows/sec |
+| `v_stage_summary` | Average/min/max elapsed and rows/sec per stage across all successful runs |
+| `v_recent_runs` | Most recent 20 runs with outcome (success/failed) and total minutes |
+| `v_stage_trends` | Per-stage timing over time, for trend analysis |
+
+Query it directly with:
+
+```bash
+sqlite3 /path/to/output/pipeline_runs.db \
+  "SELECT stage, avg_secs, avg_rows_per_sec FROM v_stage_summary"
+```

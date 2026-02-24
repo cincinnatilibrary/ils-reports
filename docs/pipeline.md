@@ -2,7 +2,7 @@
 
 ## Overview
 
-The pipeline lives in `collection_analysis/` and has four modules:
+The pipeline lives in `collection_analysis/` and has five modules:
 
 | Module | Responsibility |
 |---|---|
@@ -10,7 +10,8 @@ The pipeline lives in `collection_analysis/` and has four modules:
 | `extract.py` | Query Sierra PostgreSQL, yield rows |
 | `load.py` | Write rows to SQLite with optimised PRAGMAs |
 | `transform.py` | Execute SQL view/index files after loading |
-| `run.py` | Orchestrate all four stages |
+| `telemetry.py` | Persist per-run and per-stage timing to `pipeline_runs.db` |
+| `run.py` | Orchestrate all stages |
 
 ---
 
@@ -18,14 +19,22 @@ The pipeline lives in `collection_analysis/` and has four modules:
 
 ```
 run.main()
-  ├── config.load()              → cfg dict
-  ├── load.open_build_db()       → sqlite3.Connection (*.db.new)
-  ├── extract.*()                → row iterators
-  ├── load_table() × N           → INSERT rows into SQLite
-  ├── transform.create_views()   → execute sql/views/*.sql
-  ├── transform.create_indexes() → execute sql/indexes/*.sql
-  ├── load.finalize_db()         → ANALYZE + safe PRAGMAs
-  └── load.swap_db()             → os.replace(*.db.new → *.db)
+  ├── config.load()                    → cfg dict
+  ├── _configure_logging(cfg)          → set level + optional file handler
+  ├── telemetry.open_telemetry_db()    → pipeline_runs.db (persistent)
+  ├── telemetry.start_run()            → run_id
+  ├── try:
+  │     ├── load.open_build_db()       → sqlite3.Connection (*.db.new)
+  │     ├── extract.*() × 21           → row iterators
+  │     ├── _timed_load() × 21         → INSERT rows + per-table elapsed/rows-sec
+  │     ├── transform.create_views()   → execute sql/views/*.sql
+  │     ├── transform.create_indexes() → execute sql/indexes/*.sql
+  │     ├── load.finalize_db()         → ANALYZE + safe PRAGMAs
+  │     ├── _write_run_stats()         → INSERT _pipeline_run into *.db.new
+  │     └── load.swap_db()             → os.replace(*.db.new → *.db)
+  └── finally:
+        ├── telemetry.finish_run()     → update run row + insert stage rows
+        └── _log_summary()             → formatted stage timing table
 ```
 
 ---
@@ -88,3 +97,4 @@ sql/indexes/01_indexes.sql
 ::: collection_analysis.load
 ::: collection_analysis.transform
 ::: collection_analysis.extract
+::: collection_analysis.telemetry
