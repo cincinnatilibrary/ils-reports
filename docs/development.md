@@ -128,5 +128,4 @@ make datasette        # production config, port 8001
 make datasette-dev    # same + auto-reload on config change
 ```
 
-See [datasette/metadata.yml](../datasette/metadata.yml) for canned queries and
-column descriptions.
+See `datasette/metadata.yml` for canned queries and column descriptions.

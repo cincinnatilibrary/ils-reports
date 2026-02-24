@@ -11,30 +11,49 @@ Branch/location codes and their attributes.
 
 | Column | Type | Description |
 |---|---|---|
+| `id` | INTEGER | Sierra internal location ID (primary key) |
 | `code` | TEXT | Location code (e.g. `mapl `) — note trailing spaces are preserved |
-| `branch_code_num` | INTEGER | FK → `branch` |
+| `branch_code_num` | INTEGER | FK → `branch.code_num` |
+| `parent_location_code` | TEXT | Parent location code (for sub-locations) |
 | `is_public` | BOOLEAN | Whether this location appears in the public catalog |
+| `is_requestable` | BOOLEAN | Whether patrons can request items to this location |
+
+---
+
+## `location_name`
+
+Full display names for location codes.
+
+| Column | Type | Description |
+|---|---|---|
+| `location_id` | INTEGER | FK → `location.id` |
+| `name` | TEXT | Full display name (e.g. `Main Library`) |
 
 ---
 
 ## `branch`
 
-CHPL branch/system-level codes.
+CHPL branch/system-level codes with address and contact information.
 
 | Column | Type | Description |
 |---|---|---|
-| `code_num` | INTEGER | Branch code (primary key) |
-| `name` | TEXT | Branch name |
+| `id` | INTEGER | Sierra internal branch ID (primary key) |
+| `address` | TEXT | Street address |
+| `email_source` | TEXT | From-address for branch email |
+| `email_reply_to` | TEXT | Reply-to address for branch email |
+| `address_latitude` | REAL | Latitude for map display |
+| `address_longitude` | REAL | Longitude for map display |
+| `code_num` | INTEGER | Branch code number (used as FK in other tables) |
 
 ---
 
 ## `branch_name`
 
-Normalized display names for branches, including abbreviated and full forms.
+Normalized display names for branches.
 
 | Column | Type | Description |
 |---|---|---|
-| `branch_code_num` | INTEGER | FK → `branch` |
+| `branch_id` | INTEGER | FK → `branch.id` |
 | `name` | TEXT | Display name |
 
 ---
@@ -45,7 +64,9 @@ MARC language codes mapped to language names.
 
 | Column | Type | Description |
 |---|---|---|
+| `id` | INTEGER | Sierra internal language ID (primary key) |
 | `code` | TEXT | Three-letter MARC language code |
+| `display_order` | INTEGER | Sort order for display |
 | `name` | TEXT | Language name in English |
 
 ---
@@ -56,7 +77,8 @@ Country codes used in Sierra's location data.
 
 | Column | Type | Description |
 |---|---|---|
-| `code` | TEXT | Two-letter country code |
+| `code` | TEXT | Country code |
+| `display_order` | INTEGER | Sort order for display |
 | `name` | TEXT | Country name |
 
 ---
@@ -67,8 +89,9 @@ Sierra item status codes and their display labels.
 
 | Column | Type | Description |
 |---|---|---|
-| `code` | TEXT | Single-character status code |
-| `name` | TEXT | Human-readable status (e.g. `Available`, `Checked Out`) |
+| `item_status_code` | TEXT | Single-character status code |
+| `display_order` | INTEGER | Sort order for display |
+| `item_status_name` | TEXT | Human-readable status (e.g. `Available`, `Checked Out`) |
 
 Common codes:
 
@@ -89,8 +112,10 @@ Item type codes (format types).
 
 | Column | Type | Description |
 |---|---|---|
-| `code_num` | INTEGER | Item type code |
-| `name` | TEXT | Format name (e.g. `Book`, `DVD`, `Audiobook`) |
+| `itype_code` | INTEGER | Item type code |
+| `display_order` | INTEGER | Sort order for display |
+| `itype_name` | TEXT | Format name (e.g. `Book`, `DVD`, `Audiobook`) |
+| `physical_format_name` | TEXT | Physical format grouping name |
 
 ---
 
@@ -100,8 +125,9 @@ Sierra bibliographic level codes.
 
 | Column | Type | Description |
 |---|---|---|
-| `code` | TEXT | Single-character bib level code |
-| `name` | TEXT | Description |
+| `bib_level_property_code` | TEXT | Single-character bib level code |
+| `display_order` | INTEGER | Sort order for display |
+| `bib_level_property_name` | TEXT | Description |
 
 ---
 
@@ -111,16 +137,7 @@ Material type codes from Sierra.
 
 | Column | Type | Description |
 |---|---|---|
-| `code` | TEXT | Material type code |
-| `name` | TEXT | Material type name |
-
----
-
-## `location_name`
-
-Full display names for location codes.
-
-| Column | Type | Description |
-|---|---|---|
-| `location_code` | TEXT | FK → `location.code` |
-| `name` | TEXT | Full display name (e.g. `Main Library`) |
+| `material_property_code` | TEXT | Material type code |
+| `display_order` | INTEGER | Sort order for display |
+| `is_public` | BOOLEAN | Whether this material type is shown publicly |
+| `material_property_name` | TEXT | Material type name |

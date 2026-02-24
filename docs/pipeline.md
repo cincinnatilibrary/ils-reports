@@ -19,7 +19,7 @@ The pipeline lives in `collection_analysis/` and has four modules:
 ```
 run.main()
   ├── config.load()              → cfg dict
-  ├── load.open_build_db()       → sqlite_utils.Database (*.db.new)
+  ├── load.open_build_db()       → sqlite3.Connection (*.db.new)
   ├── extract.*()                → row iterators
   ├── load_table() × N           → INSERT rows into SQLite
   ├── transform.create_views()   → execute sql/views/*.sql
@@ -75,9 +75,9 @@ View and index SQL files are executed in alphabetical order within their
 directory. Use numeric prefixes when order matters:
 
 ```
-sql/views/01_item_view.sql
-sql/views/02_isbn_view.sql
-sql/indexes/01_item_location.sql
+sql/views/01_isbn_view.sql
+sql/views/02_duplicate_items_in_location_view.sql
+sql/indexes/01_indexes.sql
 ```
 
 ---

@@ -56,7 +56,7 @@ See [Link Tables](tables/link_tables.md) for full documentation.
 
 ## Views
 
-20 SQLite views provide pre-joined, analysis-ready datasets. See [Views](tables/views.md) for the full list.
+26 SQLite views provide pre-joined, analysis-ready datasets. See [Views](tables/views.md) for the full list.
 
 Notable views:
 
