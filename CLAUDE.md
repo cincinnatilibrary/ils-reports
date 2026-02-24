@@ -12,15 +12,14 @@ Data pipeline from the Cincinnati & Hamilton County Public Library (CHPL) Sierra
 # Install uv if needed: https://docs.astral.sh/uv/getting-started/installation/
 uv sync --all-extras       # creates .venv, installs all deps, generates uv.lock
 uv run pre-commit install  # install git hooks
-cp config.json.sample config.json
-# edit config.json with Sierra credentials and output_dir
+cp .env.sample .env
+# edit .env with Sierra credentials and OUTPUT_DIR
 ```
 
 ## Running the Pipeline
 
 ```bash
 uv run python -m collection_analysis.run
-uv run python -m collection_analysis.run --config /path/to/config.json
 # or via console script:
 uv run collection-analysis
 ```
@@ -28,16 +27,18 @@ uv run collection-analysis
 ## Tests & Linting
 
 ```bash
-make test       # unit tests (no PostgreSQL required)
-make lint       # ruff + sqlfluff
-make format     # auto-fix
+scripts/test.sh           # unit tests (no PostgreSQL required)
+scripts/test.sh --all     # all tests
+scripts/test.sh --cov     # unit tests + HTML coverage → htmlcov/
+scripts/lint.sh           # ruff + sqlfluff + djlint + CSS
+scripts/format.sh         # auto-fix
 ```
 
 ## Architecture
 
 The pipeline has four core modules in `collection_analysis/`:
 
-- **`config.py`** — Loads/validates `config.json`; builds the SQLAlchemy PostgreSQL connection URL from Sierra credentials.
+- **`config.py`** — Loads config from env vars (or `.env` via python-dotenv); accepts `config.json` as a deprecated fallback; builds the SQLAlchemy PostgreSQL connection URL from Sierra credentials.
 - **`extract.py`** — Queries Sierra's `sierra_view` PostgreSQL schema and yields rows. Currently a skeleton; extraction functions need to be ported from `reference/collection-analysis.cincy.pl_gen_db.ipynb`.
 - **`load.py`** — Manages the SQLite build lifecycle: opens a temp `*.db.new` file with aggressive write-speed PRAGMAs (`journal_mode=OFF`, `synchronous=OFF`, 2GB cache), finalizes with WAL/NORMAL PRAGMAs, then atomically swaps `*.db.new` → `*.db` via `os.replace()`. This keeps the live DB untouched if the build fails.
 - **`transform.py`** — Creates SQLite views and indexes by executing `.sql` files from `sql/views/` and `sql/indexes/` in alphabetical order. Indexes are deferred until after all tables are loaded.
@@ -57,12 +58,12 @@ The pipeline has four core modules in `collection_analysis/`:
 
 ## Configuration
 
-`config.json` (gitignored) follows the shape of `config.json.sample`. Key fields:
+Configuration is read from environment variables. Copy `.env.sample` to `.env` for local development — it is loaded automatically. Key variables:
 
-| Field | Purpose |
+| Env var | Purpose |
 |---|---|
-| `pg_host`, `pg_port`, `pg_dbname` | Sierra PostgreSQL connection |
-| `pg_username`, `pg_password` | Sierra credentials |
-| `pg_sslmode` | Default `"require"` |
-| `pg_itersize` | Server-side cursor fetch size (default 5000; increase to 10000–50000 to reduce round-trips) |
-| `output_dir` | Directory where `current_collection.db` is written |
+| `PG_HOST`, `PG_PORT`, `PG_DBNAME` | Sierra PostgreSQL connection |
+| `PG_USERNAME`, `PG_PASSWORD` | Sierra credentials |
+| `PG_SSLMODE` | Default `"require"` |
+| `PG_ITERSIZE` | Server-side cursor fetch size (default 5000; increase to 10000–50000 to reduce round-trips) |
+| `OUTPUT_DIR` | Directory where `current_collection.db` is written |

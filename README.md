@@ -17,19 +17,16 @@ served publicly via Datasette at https://collection-analysis.cincy.pl/
 ```bash
 git clone <this repo>
 cd ils-reports
-uv sync --all-extras       # creates .venv, installs all deps
-uv run pre-commit install  # install git hooks
+scripts/setup.sh   # uv sync --all-extras + pre-commit install
 
-cp config.json.sample config.json
-# edit config.json with your Sierra credentials and output path
+cp .env.sample .env
+# edit .env with your Sierra credentials and OUTPUT_DIR
 ```
 
 ## Running the pipeline
 
 ```bash
-uv run python -m collection_analysis.run
-# or, with a non-default config location:
-uv run python -m collection_analysis.run --config /path/to/config.json
+scripts/run.sh
 ```
 
 ## Project structure

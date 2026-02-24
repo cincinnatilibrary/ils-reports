@@ -8,8 +8,9 @@ version = "0.1.0"
 description = "Data pipelines from Sierra ILS (PostgreSQL) to SQLite for reporting and analysis"
 requires-python = ">=3.10"
 dependencies = [
-    "SQLAlchemy==1.4.32",
-    "psycopg2-binary==2.9.3",
+    "SQLAlchemy>=2.0",
+    "psycopg[binary]>=3.1",
+    "python-dotenv>=1.0",
     "sqlite-fts4==1.0.1",
 ]
 

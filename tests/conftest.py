@@ -2,7 +2,6 @@
 Shared pytest fixtures for ils-reports test suite.
 """
 
-import json
 import sqlite3
 
 import pytest
@@ -34,8 +33,8 @@ def empty_db(tmp_path):
 
 
 @pytest.fixture
-def valid_config(tmp_path):
-    """A minimal valid config.json dict and path."""
+def valid_config(tmp_path, monkeypatch):
+    """Minimal valid configuration set via environment variables."""
     cfg = {
         "pg_host": "localhost",
         "pg_port": 1032,
@@ -44,9 +43,13 @@ def valid_config(tmp_path):
         "pg_password": "testpass",
         "output_dir": str(tmp_path / "output"),
     }
-    config_path = tmp_path / "config.json"
-    config_path.write_text(json.dumps(cfg))
-    return cfg, str(config_path)
+    monkeypatch.setenv("PG_HOST", cfg["pg_host"])
+    monkeypatch.setenv("PG_PORT", str(cfg["pg_port"]))
+    monkeypatch.setenv("PG_DBNAME", cfg["pg_dbname"])
+    monkeypatch.setenv("PG_USERNAME", cfg["pg_username"])
+    monkeypatch.setenv("PG_PASSWORD", cfg["pg_password"])
+    monkeypatch.setenv("OUTPUT_DIR", cfg["output_dir"])
+    return cfg
 
 
 # ---------------------------------------------------------------------------
