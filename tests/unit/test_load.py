@@ -1,5 +1,10 @@
 """Unit tests for collection_analysis.load — SQLite only, no PostgreSQL."""
 
+import json
+import logging
+import sqlite3
+from datetime import date, datetime
+
 import pytest
 
 from collection_analysis import load
@@ -74,3 +79,63 @@ class TestSwapDb:
         # No build DB was created — swap should raise
         with pytest.raises(FileNotFoundError):
             load.swap_db(tmp_output_dir)
+
+
+class TestLoadTable:
+    def _mem_db(self):
+        return sqlite3.connect(":memory:")
+
+    def test_load_table_creates_table(self):
+        db = self._mem_db()
+        rows = [{"id": 1, "name": "alpha"}, {"id": 2, "name": "beta"}]
+        count = load.load_table(db, "items", iter(rows))
+        assert count == 2
+        result = db.execute("SELECT id, name FROM items ORDER BY id").fetchall()
+        assert result == [(1, "alpha"), (2, "beta")]
+        db.close()
+
+    def test_load_table_json_serializes_dicts(self):
+        db = self._mem_db()
+        payload = {"key": "value", "num": 42}
+        rows = [{"id": 1, "data": payload}]
+        load.load_table(db, "items", iter(rows))
+        raw = db.execute("SELECT data FROM items").fetchone()[0]
+        assert json.loads(raw) == payload
+        db.close()
+
+    def test_load_table_json_serializes_lists(self):
+        db = self._mem_db()
+        payload = [1, 2, 3]
+        rows = [{"id": 1, "tags": payload}]
+        load.load_table(db, "items", iter(rows))
+        raw = db.execute("SELECT tags FROM items").fetchone()[0]
+        assert json.loads(raw) == payload
+        db.close()
+
+    def test_load_table_serializes_dates(self):
+        db = self._mem_db()
+        d = date(2024, 6, 15)
+        dt = datetime(2024, 6, 15, 12, 30, 0)
+        rows = [{"d": d, "dt": dt}]
+        load.load_table(db, "items", iter(rows))
+        row = db.execute("SELECT d, dt FROM items").fetchone()
+        assert row[0] == "2024-06-15"
+        assert row[1] == "2024-06-15T12:30:00"
+        db.close()
+
+    def test_load_table_empty_rows_returns_zero(self, caplog):
+        db = self._mem_db()
+        with caplog.at_level(logging.WARNING, logger="collection_analysis.load"):
+            count = load.load_table(db, "items", iter([]))
+        assert count == 0
+        assert "No rows loaded" in caplog.text
+        db.close()
+
+    def test_load_table_batching(self):
+        db = self._mem_db()
+        rows = [{"n": i} for i in range(250)]
+        count = load.load_table(db, "nums", iter(rows), batch_size=100)
+        assert count == 250
+        result = db.execute("SELECT COUNT(*) FROM nums").fetchone()[0]
+        assert result == 250
+        db.close()

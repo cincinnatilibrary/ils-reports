@@ -22,7 +22,6 @@ def test_pg_connection(sierra_db):
 
 
 @pytest.mark.integration
-@pytest.mark.skip(reason="extract.py not yet implemented — add cases as functions are ported")
 def test_extract_bib_returns_rows(sierra_db, sierra_config):
     """extract_bib() yields dicts with the expected columns."""
     from sqlalchemy import create_engine
@@ -37,6 +36,39 @@ def test_extract_bib_returns_rows(sierra_db, sierra_config):
     first = rows[0]
     assert "bib_record_num" in first
     assert "best_title" in first
+
+
+@pytest.mark.integration
+def test_extract_item_returns_rows(sierra_db, sierra_config):
+    """extract_item() yields dicts with the expected columns."""
+    from sqlalchemy import create_engine
+
+    from collection_analysis import config as cfg_module
+    from collection_analysis import extract
+
+    engine = create_engine(cfg_module.pg_connection_string(sierra_config))
+    with engine.connect() as pg:
+        rows = list(extract.extract_item(pg, sierra_config["pg_itersize"]))
+    assert len(rows) > 0
+    first = rows[0]
+    assert "item_record_num" in first
+    assert "item_status_code" in first
+
+
+@pytest.mark.integration
+def test_extract_record_metadata_returns_rows(sierra_db, sierra_config):
+    """extract_record_metadata() yields rows for b, i, j record types."""
+    from sqlalchemy import create_engine
+
+    from collection_analysis import config as cfg_module
+    from collection_analysis import extract
+
+    engine = create_engine(cfg_module.pg_connection_string(sierra_config))
+    with engine.connect() as pg:
+        rows = list(extract.extract_record_metadata(pg, sierra_config["pg_itersize"]))
+    assert len(rows) > 0
+    types = {r["record_type_code"] for r in rows}
+    assert types <= {"b", "i", "j"}
 
 
 @pytest.mark.integration
@@ -56,6 +88,7 @@ def test_full_pipeline_end_to_end(sierra_config, tmp_path):
 
     # Patch sys.argv so argparse picks up our config path
     import sys
+
     sys_argv_orig = sys.argv
     sys.argv = ["collection-analysis", "--config", str(config_path)]
     try:
@@ -65,6 +98,20 @@ def test_full_pipeline_end_to_end(sierra_config, tmp_path):
 
     db_path = load.final_path(sierra_config["output_dir"])
     assert db_path.exists(), f"Expected {db_path} to exist after pipeline run"
+
+    import sqlite3
+
+    conn = sqlite3.connect(db_path)
+    tables = {
+        row[0]
+        for row in conn.execute("SELECT name FROM sqlite_master WHERE type='table'").fetchall()
+    }
+    # Core tables must be present and non-empty
+    for table in ("bib", "item", "record_metadata"):
+        assert table in tables, f"Expected table '{table}' in database"
+        count = conn.execute(f"SELECT count(*) FROM {table}").fetchone()[0]
+        assert count > 0, f"Expected non-empty table '{table}', got 0 rows"
+    conn.close()
 
 
 @pytest.mark.integration

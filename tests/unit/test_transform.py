@@ -9,10 +9,7 @@ from collection_analysis import transform
 
 def _view_names(conn):
     return [
-        r[0]
-        for r in conn.execute(
-            "SELECT name FROM sqlite_master WHERE type='view'"
-        ).fetchall()
+        r[0] for r in conn.execute("SELECT name FROM sqlite_master WHERE type='view'").fetchall()
     ]
 
 
@@ -58,10 +55,7 @@ class TestMultiStatement:
         """Multiple semicolon-separated statements in one file all execute."""
         empty_db.execute("CREATE TABLE t1 (id INTEGER PRIMARY KEY)")
         empty_db.execute("CREATE TABLE t2 (id INTEGER PRIMARY KEY)")
-        sql = (
-            "CREATE VIEW v1 AS SELECT id FROM t1;\n"
-            "CREATE VIEW v2 AS SELECT id FROM t2"
-        )
+        sql = "CREATE VIEW v1 AS SELECT id FROM t1;\nCREATE VIEW v2 AS SELECT id FROM t2"
         (tmp_sql_dir / "views" / "01_multi.sql").write_text(sql)
         transform.create_views(empty_db, sql_dir=tmp_sql_dir)
         assert "v1" in _view_names(empty_db)

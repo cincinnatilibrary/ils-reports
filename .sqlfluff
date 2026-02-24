@@ -1,8 +1,18 @@
 [sqlfluff]
 templater = raw
 dialect = sqlite
-max_line_length = 100
-exclude_rules = RF05
+max_line_length = 150
+# RF05: object references (not useful for SQLite)
+# RF01-RF03: reference qualification — false positives for json_each and
+#   overly strict for complex multi-table analytical views ported from the
+#   reference notebook.
+# AL03: expression without alias — COUNT(*) in CTEs doesn't need naming.
+# AL04/AL08: duplicate alias rules — trigger on valid subquery patterns.
+# AM04: SELECT * — used in views that intentionally expand all columns.
+# AM05: ambiguous JOIN — JOIN and INNER JOIN are equivalent in SQLite.
+# AM09: LIMIT without ORDER BY — intentional in some analytical queries.
+# ST09: join condition order — style preference, not correctness.
+exclude_rules = RF05,RF01,RF02,RF03,AL03,AL04,AL08,AM04,AM05,AM09,ST09
 
 [sqlfluff:layout:type:comma]
 line_position = trailing

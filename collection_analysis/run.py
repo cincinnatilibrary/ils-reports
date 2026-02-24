@@ -14,8 +14,6 @@ What it does:
     6. Create indexes (sql/indexes/)
     7. Finalize (ANALYZE, re-apply safe PRAGMAs)
     8. Atomically swap temp database -> live database
-
-TODO: Wire up extract.py calls once queries are ported from the reference notebook.
 """
 
 import argparse
@@ -23,8 +21,10 @@ import logging
 import time
 from datetime import datetime
 
+from sqlalchemy import create_engine
+
 from . import config as cfg_module
-from . import load, transform
+from . import extract, load, transform
 
 logging.basicConfig(
     level=logging.INFO,
@@ -50,13 +50,49 @@ def main():
     logger.info(f"Output directory: {cfg['output_dir']}")
 
     db = load.open_build_db(cfg["output_dir"])
+    itersize = cfg["pg_itersize"]
 
-    # TODO: connect to Sierra and load each table
-    # from sqlalchemy import create_engine, text
-    # engine = create_engine(cfg_module.pg_connection_string(cfg))
-    # with engine.connect() as pg:
-    #     load_table(db, "bib", extract.extract_bib(pg, cfg["pg_itersize"]))
-    #     ...
+    engine = create_engine(cfg_module.pg_connection_string(cfg))
+    with engine.connect() as pg:
+        logger.info("Extracting tables from Sierra ...")
+
+        load.load_table(db, "record_metadata", extract.extract_record_metadata(pg, itersize))
+        load.load_table(db, "bib", extract.extract_bib(pg, itersize))
+        load.load_table(db, "item", extract.extract_item(pg, itersize))
+        load.load_table(db, "bib_record", extract.extract_bib_record(pg, itersize))
+        load.load_table(db, "volume_record", extract.extract_volume_record(pg, itersize))
+        load.load_table(db, "item_message", extract.extract_item_message(pg, itersize))
+        load.load_table(db, "language_property", extract.extract_language_property(pg, itersize))
+        load.load_table(
+            db,
+            "bib_record_item_record_link",
+            extract.extract_bib_record_item_record_link(pg, itersize),
+        )
+        load.load_table(
+            db,
+            "volume_record_item_record_link",
+            extract.extract_volume_record_item_record_link(pg, itersize),
+        )
+        load.load_table(db, "location", extract.extract_location(pg, itersize))
+        load.load_table(db, "location_name", extract.extract_location_name(pg, itersize))
+        load.load_table(db, "branch_name", extract.extract_branch_name(pg, itersize))
+        load.load_table(db, "branch", extract.extract_branch(pg, itersize))
+        load.load_table(
+            db,
+            "country_property_myuser",
+            extract.extract_country_property_myuser(pg, itersize),
+        )
+        load.load_table(
+            db,
+            "item_status_property",
+            extract.extract_item_status_property(pg, itersize),
+        )
+        load.load_table(db, "itype_property", extract.extract_itype_property(pg, itersize))
+        load.load_table(db, "bib_level_property", extract.extract_bib_level_property(pg, itersize))
+        load.load_table(db, "material_property", extract.extract_material_property(pg, itersize))
+        load.load_table(db, "hold", extract.extract_hold(pg, itersize))
+        load.load_table(db, "circ_agg", extract.extract_circ_agg(pg, itersize))
+        load.load_table(db, "circ_leased_items", extract.extract_circ_leased_items(pg, itersize))
 
     logger.info("Creating views ...")
     transform.create_views(db)
