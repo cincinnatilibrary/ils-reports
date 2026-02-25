@@ -52,6 +52,32 @@ The pipeline has four core modules in `collection_analysis/`:
 - **SQL files control view/index order** — use numeric prefixes (e.g., `01_item_view.sql`) when ordering matters.
 - **No dbt, no ORM for transforms** — plain SQL files in `sql/views/` and `sql/indexes/`.
 
+## Git Workflow
+
+All non-trivial work must go through a branch → PR → squash-merge cycle on `main`.
+
+**Branch naming:**
+- `feat/<slug>` — new feature or capability
+- `fix/<slug>` — bug fix
+- `chore/<slug>` — maintenance, deps, tooling
+- `docs/<slug>` — documentation only
+- `ci/<slug>` — CI/CD changes
+- `security/<slug>` — security hardening
+
+**Commit discipline:**
+- Each commit must be tight and focused — one logical change per commit.
+- Subject line: `<type>: <what changed>` (50 chars or less), e.g. `feat: add extract_item_type()`.
+- Body (if needed): explain *why*, not *what*. Wrap at 72 chars.
+- Do not bundle unrelated changes into a single commit.
+
+**Merging:**
+- Squash and merge PRs into `main` — keeps history linear and each entry meaningful.
+- The squash commit message should summarise the entire branch in the same `<type>: ...` format.
+- Delete the branch after merge.
+
+**Future tooling (TODO):**
+- Adopt `act` for local GitHub Actions testing once workflow complexity grows.
+
 ## Reference Material
 
 `reference/collection-analysis.cincy.pl_gen_db.ipynb` is the authoritative source for all Sierra extraction queries and the full list of tables/views to implement. Use it when porting logic into `extract.py` and the `sql/` directories.
