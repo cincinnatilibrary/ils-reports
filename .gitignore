@@ -17,6 +17,8 @@ build/
 .venv/
 venv/
 *.egg
+.coverage
+htmlcov/
 
 # Jupyter
 .ipynb_checkpoints/
