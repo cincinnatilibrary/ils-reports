@@ -13,6 +13,7 @@ Environment variables (primary, preferred):
     PG_SLEEP_BETWEEN_TABLES   Seconds to pause between tables (default 0.0)  (optional)
     LOG_LEVEL                 DEBUG | INFO | WARNING                 (optional, default 'INFO')
     LOG_FILE                  Path to log file; unset disables       (optional)
+    EXTRACT_LIMIT             Cap each table at N rows; 0 = no limit (optional, default 0)
 For local development, copy .env.sample to .env — it is loaded automatically.
 
 Legacy: config.json is still accepted but deprecated.  A DeprecationWarning is
@@ -39,6 +40,7 @@ _ENV_VARS: list[tuple[str, str]] = [
     ("PG_SLEEP_BETWEEN_TABLES", "pg_sleep_between_tables"),
     ("LOG_LEVEL", "log_level"),
     ("LOG_FILE", "log_file"),
+    ("EXTRACT_LIMIT", "extract_limit"),
 ]
 
 _REQUIRED_KEYS = {"pg_host", "pg_port", "pg_dbname", "pg_username", "pg_password", "output_dir"}
@@ -144,11 +146,25 @@ def load(config_path: str | None = None) -> dict:
             f"{cfg.get('pg_sleep_between_tables')!r}"
         ) from exc
 
+    try:
+        cfg["extract_limit"] = int(cfg.get("extract_limit", 0))
+    except (ValueError, TypeError) as exc:
+        raise ValueError(
+            f"EXTRACT_LIMIT must be a non-negative integer, got "
+            f"{cfg.get('extract_limit')!r}"
+        ) from exc
+    if cfg["extract_limit"] < 0:
+        raise ValueError(
+            f"EXTRACT_LIMIT must be 0 (no limit) or a positive integer, "
+            f"got {cfg['extract_limit']!r}"
+        )
+
     cfg.setdefault("pg_sslmode", "require")
     cfg.setdefault("pg_itersize", 15000)
     cfg.setdefault("pg_sleep_between_tables", 0.0)
     cfg.setdefault("log_level", "INFO")
     cfg.setdefault("log_file", None)
+    cfg.setdefault("extract_limit", 0)
 
     return cfg
 

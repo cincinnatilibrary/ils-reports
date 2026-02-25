@@ -21,6 +21,7 @@ What it does:
 """
 
 import argparse
+import itertools
 import logging
 import time
 from datetime import datetime
@@ -112,6 +113,13 @@ def main():
         db = load.open_build_db(cfg["output_dir"])
         itersize = cfg["pg_itersize"]
         sleep_between = cfg.get("pg_sleep_between_tables", 0.0)
+        extract_limit = cfg.get("extract_limit", 0)
+        if extract_limit > 0:
+            logger.warning(
+                "EXTRACT_LIMIT=%d — each table capped at %d rows. "
+                "This is a SAMPLE database, not suitable for production.",
+                extract_limit, extract_limit,
+            )
 
         engine = create_engine(cfg_module.pg_connection_string(cfg))
         with engine.connect() as pg:
@@ -161,7 +169,8 @@ def main():
                     extract.extract_circ_leased_items(pg, itersize),
                 ),
             ]:
-                n, elapsed = _timed_load(db, name, gen)
+                capped = itertools.islice(gen, extract_limit) if extract_limit > 0 else gen
+                n, elapsed = _timed_load(db, name, capped)
                 stats.append(
                     {
                         "stage": name,

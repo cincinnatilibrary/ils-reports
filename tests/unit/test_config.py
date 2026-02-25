@@ -181,6 +181,37 @@ class TestSleepBetweenTables:
         assert result["pg_sleep_between_tables"] == -1.5
 
 
+class TestExtractLimit:
+    def test_default_is_zero(self, valid_config):
+        result = config.load()
+        assert result["extract_limit"] == 0
+
+    def test_positive_integer(self, valid_config, monkeypatch):
+        monkeypatch.setenv("EXTRACT_LIMIT", "500")
+        result = config.load()
+        assert result["extract_limit"] == 500
+
+    def test_coerced_to_int(self, valid_config, monkeypatch):
+        monkeypatch.setenv("EXTRACT_LIMIT", "100")
+        result = config.load()
+        assert isinstance(result["extract_limit"], int)
+
+    def test_zero_means_no_limit(self, valid_config, monkeypatch):
+        monkeypatch.setenv("EXTRACT_LIMIT", "0")
+        result = config.load()
+        assert result["extract_limit"] == 0
+
+    def test_invalid_value_raises(self, valid_config, monkeypatch):
+        monkeypatch.setenv("EXTRACT_LIMIT", "not_a_number")
+        with pytest.raises(ValueError, match="EXTRACT_LIMIT"):
+            config.load()
+
+    def test_negative_value_raises(self, valid_config, monkeypatch):
+        monkeypatch.setenv("EXTRACT_LIMIT", "-1")
+        with pytest.raises(ValueError, match="EXTRACT_LIMIT"):
+            config.load()
+
+
 class TestPgConnectionString:
     def test_pg_connection_string_format(self, valid_config):
         cfg = config.load()

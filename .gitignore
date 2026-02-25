@@ -29,6 +29,9 @@ output.html
 *.log
 logs/
 
+# Sample build output
+out/
+
 # OS
 .DS_Store
 

@@ -1,5 +1,6 @@
 """Unit tests for run.py helpers (no PostgreSQL required)."""
 
+import itertools
 import logging
 import sqlite3
 from pathlib import Path
@@ -173,3 +174,41 @@ class TestLogSummary:
             _log_summary(stats, 1.5)
         assert "record_metadata" in caplog.text
         assert "bib" in caplog.text
+
+
+class TestExtractLimitIslice:
+    """Verify islice correctly caps generators as used in run.main()."""
+
+    def _db(self):
+        return sqlite3.connect(":memory:")
+
+    def test_islice_caps_rows(self):
+        db = self._db()
+        rows = ({"id": i} for i in range(100))
+        n, _ = _timed_load(db, "t", itertools.islice(rows, 5))
+        assert n == 5
+        db.close()
+
+    def test_no_islice_when_limit_zero(self):
+        db = self._db()
+        rows = [{"id": i} for i in range(10)]
+        extract_limit = 0
+        gen = iter(rows)
+        capped = itertools.islice(gen, extract_limit) if extract_limit > 0 else gen
+        n, _ = _timed_load(db, "t", capped)
+        assert n == 10
+        db.close()
+
+    def test_islice_larger_than_source(self):
+        db = self._db()
+        rows = ({"id": i} for i in range(10))
+        n, _ = _timed_load(db, "t", itertools.islice(rows, 1000))
+        assert n == 10
+        db.close()
+
+    def test_islice_zero_yields_nothing(self):
+        db = self._db()
+        rows = ({"id": i} for i in range(100))
+        n, _ = _timed_load(db, "t", itertools.islice(rows, 0))
+        assert n == 0
+        db.close()
