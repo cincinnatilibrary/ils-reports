@@ -61,3 +61,16 @@ profile = "jinja"
 indent = 2
 max_line_length = 120
 ignore = "H006,E102,J018,J004"
+
+[tool.coverage.run]
+source = ["collection_analysis"]
+omit = ["*/tests/*"]
+
+[tool.coverage.report]
+show_missing = true
+fail_under = 85
+exclude_lines = [
+    "pragma: no cover",
+    "if __name__ == .__main__.:",
+    "raise NotImplementedError",
+]

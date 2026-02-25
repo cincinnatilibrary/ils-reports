@@ -17,7 +17,8 @@ case "${1:-}" in
     ;;
   --cov)
     uv run pytest tests/unit/ --cov=collection_analysis \
-        --cov-report=term-missing --cov-report=html
+        --cov-report=term-missing --cov-report=html \
+        --cov-fail-under=85
     ;;
   "")
     uv run pytest tests/unit/
