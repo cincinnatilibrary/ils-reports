@@ -233,3 +233,12 @@ class TestLoadTable:
         count = db.execute("SELECT COUNT(*) FROM items").fetchone()[0]
         db.close()
         assert count == 2
+
+    def test_datetime_with_microseconds(self):
+        db = self._mem_db()
+        dt = datetime(2024, 6, 15, 12, 30, 0, 123456)
+        rows = [{"ts": dt}]
+        load.load_table(db, "items", iter(rows))
+        val = db.execute("SELECT ts FROM items").fetchone()[0]
+        db.close()
+        assert val == "2024-06-15T12:30:00.123456"

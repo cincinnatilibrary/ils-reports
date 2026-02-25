@@ -70,6 +70,19 @@ class TestConfigureLogging:
                 h.close()
                 root.removeHandler(h)
 
+    def test_unwritable_log_dir_raises_permission_error(self, tmp_path):
+        """FileHandler raises PermissionError for an unwritable directory."""
+        unwritable_dir = tmp_path / "noperms"
+        unwritable_dir.mkdir()
+        unwritable_dir.chmod(0o000)
+        log_file = str(unwritable_dir / "run.log")
+        cfg = {"log_file": log_file, "log_level": "INFO"}
+        try:
+            with pytest.raises(PermissionError):
+                _configure_logging(cfg)
+        finally:
+            unwritable_dir.chmod(0o755)  # restore so tmp_path cleanup succeeds
+
 
 class TestTimedLoad:
     def _make_db(self):
