@@ -100,6 +100,28 @@ pre-commit run --all-files
 
 ---
 
+## Secret scanning
+
+[`detect-secrets`](https://github.com/Yelp/detect-secrets) runs as a pre-commit hook
+and as a dedicated CI job. It blocks commits (locally) or builds (CI) that introduce
+credential-like patterns not already in `.secrets.baseline`.
+
+**To run manually:**
+```bash
+uv run --with detect-secrets detect-secrets scan --baseline .secrets.baseline 2>/dev/null
+```
+
+**When you add a legitimate placeholder** (e.g., a new sample config file with a
+`PASSWORD=` line), update the baseline so the hook doesn't block you:
+```bash
+uv run --with detect-secrets detect-secrets scan \
+  --exclude-files 'reference/.*' --exclude-files '.*\.ipynb$' \
+  2>/dev/null > .secrets.baseline
+git add .secrets.baseline
+```
+
+---
+
 ## Adding a new extraction function
 
 1. Add the query to `collection_analysis/extract.py` following the naming
