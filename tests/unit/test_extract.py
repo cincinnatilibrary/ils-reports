@@ -2,6 +2,8 @@
 
 from unittest.mock import MagicMock
 
+import pytest
+
 from collection_analysis import extract
 from collection_analysis.extract import _load_sql
 
@@ -43,6 +45,10 @@ class TestLoadSql:
         sql = _load_sql("item_message")
         assert "(?:AM|PM)" not in sql, "Old SQLAlchemy-breaking pattern still present"
         assert "[AP]M" in sql, "Fixed character-class pattern missing"
+
+    def test_missing_file_raises_file_not_found_error(self):
+        with pytest.raises(FileNotFoundError):
+            _load_sql("nonexistent_query_xyz")
 
 
 def _make_mock_conn(rows_per_call):
@@ -115,6 +121,29 @@ class TestExtractRecordMetadata:
         rows = list(extract.extract_record_metadata(conn, itersize=1000))
         assert rows == []
 
+    def test_multi_page_pagination(self):
+        """Two full batches followed by an empty page yields all rows."""
+
+        def _row(record_id):
+            return {
+                "record_id": record_id,
+                "record_num": record_id,
+                "record_type_code": "b",
+                "creation_julianday": 2459000,
+                "record_last_updated_julianday": 2459500,
+                "deletion_julianday": None,
+            }
+
+        batch1 = [_row(1), _row(2)]
+        batch2 = [_row(3), _row(4)]
+        conn = _make_mock_conn([batch1, batch2])
+        rows = list(extract.extract_record_metadata(conn, itersize=2))
+        assert len(rows) == 4
+        assert [r["record_id"] for r in rows] == [1, 2, 3, 4]
+        # Third execute call should use cursor id from last row of batch2 (id=4)
+        third_call_kwargs = conn.execute.call_args_list[2][0][1]
+        assert third_call_kwargs["id_val"] == 4
+
 
 class TestExtractBib:
     def test_yields_expected_columns(self):
@@ -165,6 +194,31 @@ class TestExtractBib:
         list(extract.extract_bib(conn, itersize=1))
         second_call_kwargs = conn.execute.call_args_list[1][0][1]
         assert second_call_kwargs["id_val"] == 42
+
+    def test_single_row_last_page_terminates(self):
+        """A single-row batch (< itersize) terminates after exactly 2 execute calls."""
+        batch = [
+            {
+                "bib_record_num": 99,
+                "bib_record_id": 99,
+                "control_numbers": None,
+                "isbn_values": None,
+                "best_author": None,
+                "best_title": "Single",
+                "publisher": None,
+                "publish_year": None,
+                "bib_level_callnumber": None,
+                "indexed_subjects": None,
+                "genres": None,
+                "item_types": None,
+                "cataloging_date": None,
+            }
+        ]
+        conn = _make_mock_conn([batch])
+        rows = list(extract.extract_bib(conn, itersize=10))
+        assert len(rows) == 1
+        # First call returns 1 row (< itersize=10), second call returns [] → stop
+        assert conn.execute.call_count == 2
 
 
 class TestExtractItem:
@@ -378,6 +432,64 @@ class TestExtractLookupTables:
         assert len(result) == 1
         assert result[0]["name"] == "Anderson"
 
+    def test_extract_location_name(self):
+        rows = [{"location_id": 1, "name": "Main Library"}]
+        conn = self._single_result_conn(rows)
+        result = list(extract.extract_location_name(conn))
+        assert len(result) == 1
+        assert result[0]["name"] == "Main Library"
+
+    def test_extract_branch(self):
+        rows = [
+            {
+                "id": 2,
+                "address": "123 Main St",
+                "email_source": None,
+                "email_reply_to": None,
+                "address_latitude": 39.1,
+                "address_longitude": -84.5,
+                "code_num": 2,
+            }
+        ]
+        conn = self._single_result_conn(rows)
+        result = list(extract.extract_branch(conn))
+        assert len(result) == 1
+        assert result[0]["code_num"] == 2
+
+    def test_extract_country_property_myuser(self):
+        rows = [{"code": "ohu", "display_order": 1, "name": "Ohio"}]
+        conn = self._single_result_conn(rows)
+        result = list(extract.extract_country_property_myuser(conn))
+        assert len(result) == 1
+        assert result[0]["code"] == "ohu"
+
+    def test_extract_bib_level_property(self):
+        rows = [
+            {
+                "bib_level_property_code": "a",
+                "display_order": 1,
+                "bib_level_property_name": "Monograph",
+            }
+        ]
+        conn = self._single_result_conn(rows)
+        result = list(extract.extract_bib_level_property(conn))
+        assert len(result) == 1
+        assert result[0]["bib_level_property_code"] == "a"
+
+    def test_extract_material_property(self):
+        rows = [
+            {
+                "material_property_code": "a",
+                "display_order": 1,
+                "is_public": True,
+                "material_property_name": "Book",
+            }
+        ]
+        conn = self._single_result_conn(rows)
+        result = list(extract.extract_material_property(conn))
+        assert len(result) == 1
+        assert result[0]["material_property_name"] == "Book"
+
 
 class TestExtractCircAgg:
     def test_yields_rows(self):
@@ -402,3 +514,118 @@ class TestExtractCircAgg:
         result = list(extract.extract_circ_agg(conn))
         assert len(result) == 1
         assert result[0]["op_code"] == "o"
+
+
+class TestExtractItemMessage:
+    def test_yields_expected_columns(self):
+        batch = [
+            {
+                "item_barcode": "31068012345678",
+                "campus_code": "",
+                "call_number": "FIC DOE",
+                "item_record_id": 6001,
+                "varfield_id": 9001,
+                "has_in_transit": False,
+                "in_transit_julianday": None,
+                "in_transit_days": None,
+                "transit_from": None,
+                "transit_to": None,
+                "has_in_transit_too_long": False,
+                "occ_num": 0,
+                "field_content": "some message",
+                "publish_year": 2020,
+                "best_title": "Test Book",
+                "best_author": "Doe",
+                "item_status_code": "-",
+                "item_status_name": "Available",
+                "agency_code_num": 0,
+                "location_code": "2anf",
+                "itype_code_num": 0,
+                "item_format": "Book",
+                "due_julianday": None,
+                "loanrule_code_num": None,
+                "checkout_julianday": None,
+                "renewal_count": None,
+                "overdue_count": None,
+                "overdue_julianday": None,
+            }
+        ]
+        conn = _make_mock_conn([batch])
+        rows = list(extract.extract_item_message(conn, itersize=1000))
+        assert len(rows) == 1
+        assert rows[0]["varfield_id"] == 9001
+        assert rows[0]["item_status_code"] == "-"
+
+
+class TestExtractBibRecordItemRecordLink:
+    def test_yields_expected_columns(self):
+        batch = [
+            {
+                "id": 1001,
+                "bib_record_id": 5001,
+                "bib_record_num": 1001,
+                "item_record_id": 6001,
+                "item_record_num": 2001,
+                "items_display_order": 0,
+                "bibs_display_order": 0,
+            }
+        ]
+        conn = _make_mock_conn([batch])
+        rows = list(extract.extract_bib_record_item_record_link(conn, itersize=1000))
+        assert len(rows) == 1
+        assert rows[0]["bib_record_num"] == 1001
+        assert rows[0]["item_record_num"] == 2001
+
+
+class TestExtractVolumeRecordItemRecordLink:
+    def test_yields_expected_columns(self):
+        batch = [
+            {
+                "id": 2001,
+                "volume_record_id": 3001,
+                "volume_record_num": 10,
+                "item_record_id": 6001,
+                "item_record_num": 2001,
+                "items_display_order": 0,
+                "volume_statement": "v.1",
+            }
+        ]
+        conn = _make_mock_conn([batch])
+        rows = list(extract.extract_volume_record_item_record_link(conn, itersize=1000))
+        assert len(rows) == 1
+        assert rows[0]["volume_statement"] == "v.1"
+
+
+class TestExtractCircLeasedItems:
+    def test_yields_expected_columns(self):
+        batch = [
+            {
+                "id": 3001,
+                "transaction_day": "2024-01-01",
+                "stat_group_code_num": 10,
+                "stat_group_name": "Anderson",
+                "stat_group_location_code": "2anf",
+                "stat_group_branch_name": "Anderson",
+                "op_code": "o",
+                "application_name": "Self-Checkout",
+                "due_date": "2024-01-15",
+                "item_record_id": 6001,
+                "item_record_num": 2001,
+                "barcode": "L000000123456",
+                "bib_record_id": 5001,
+                "bib_record_num": 1001,
+                "volume_record_id": None,
+                "volume_record_num": None,
+                "itype_code_num": 0,
+                "item_location_code": "2anf",
+                "ptype_code": 0,
+                "patron_home_library_code": "2anf",
+                "patron_agency_code_num": 0,
+                "loanrule_code_num": 1,
+            }
+        ]
+        conn = _make_mock_conn([batch])
+        rows = list(extract.extract_circ_leased_items(conn, itersize=1000))
+        assert len(rows) == 1
+        assert rows[0]["op_code"] == "o"
+        assert rows[0]["barcode"] == "L000000123456"

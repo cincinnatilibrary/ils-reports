@@ -49,6 +49,29 @@ class TestOpenBuildDb:
         assert result == 8192
         db.close()
 
+    def test_deletes_stale_new_file(self, tmp_output_dir):
+        stale_path = load.build_path(tmp_output_dir)
+        stale_path.write_bytes(b"THIS IS NOT A SQLITE FILE")
+        db = load.open_build_db(tmp_output_dir)
+        db.close()
+        # File should now be a valid empty SQLite database
+        fresh_db = sqlite3.connect(stale_path)
+        count = fresh_db.execute("SELECT COUNT(*) FROM sqlite_master").fetchone()[0]
+        fresh_db.close()
+        assert count == 0
+
+    def test_build_pragma_synchronous_off(self, tmp_output_dir):
+        db = load.open_build_db(tmp_output_dir)
+        result = db.execute("PRAGMA synchronous").fetchone()[0]
+        db.close()
+        assert result == 0  # OFF
+
+    def test_build_pragma_cache_size(self, tmp_output_dir):
+        db = load.open_build_db(tmp_output_dir)
+        result = db.execute("PRAGMA cache_size").fetchone()[0]
+        db.close()
+        assert result < 0  # negative value = size in kilobytes
+
 
 class TestFinalizeDb:
     def test_finalize_db_sets_wal(self, tmp_output_dir):
@@ -63,6 +86,13 @@ class TestFinalizeDb:
         # Should not raise
         load.finalize_db(db)
         db.close()
+
+    def test_finalize_sets_synchronous_normal(self, tmp_output_dir):
+        db = load.open_build_db(tmp_output_dir)
+        load.finalize_db(db)
+        result = db.execute("PRAGMA synchronous").fetchone()[0]
+        db.close()
+        assert result == 1  # NORMAL
 
 
 class TestSwapDb:
@@ -85,6 +115,35 @@ class TestSwapDb:
         # No build DB was created — swap should raise
         with pytest.raises(FileNotFoundError):
             load.swap_db(tmp_output_dir)
+
+    def test_swap_overwrites_existing_live_db(self, tmp_output_dir):
+        # Pre-create a live DB at the destination
+        dst = load.final_path(tmp_output_dir)
+        sqlite3.connect(dst).close()
+        assert dst.exists()
+
+        db = load.open_build_db(tmp_output_dir)
+        load.finalize_db(db)
+        db.close()
+        load.swap_db(tmp_output_dir)
+
+        assert dst.exists()
+        assert not load.build_path(tmp_output_dir).exists()
+
+    def test_swap_content_correct(self, tmp_output_dir):
+        db = load.open_build_db(tmp_output_dir)
+        db.execute("CREATE TABLE sentinel (id INTEGER)")
+        db.execute("INSERT INTO sentinel VALUES (42)")
+        db.commit()
+        load.finalize_db(db)
+        db.close()
+        load.swap_db(tmp_output_dir)
+
+        dst = load.final_path(tmp_output_dir)
+        check_db = sqlite3.connect(dst)
+        val = check_db.execute("SELECT id FROM sentinel").fetchone()[0]
+        check_db.close()
+        assert val == 42
 
 
 class TestLoadTable:
@@ -150,3 +209,27 @@ class TestLoadTable:
         import inspect
         sig = inspect.signature(load.load_table)
         assert sig.parameters["batch_size"].default == 5000
+
+    def test_none_values_stored_as_null(self):
+        db = self._mem_db()
+        rows = [{"id": 1, "name": None}]
+        load.load_table(db, "items", iter(rows))
+        val = db.execute("SELECT name FROM items").fetchone()[0]
+        db.close()
+        assert val is None
+
+    def test_unicode_values(self):
+        db = self._mem_db()
+        rows = [{"id": 1, "label": "Hello 🌍 café"}]
+        load.load_table(db, "items", iter(rows))
+        val = db.execute("SELECT label FROM items").fetchone()[0]
+        db.close()
+        assert val == "Hello 🌍 café"
+
+    def test_table_already_exists_is_idempotent(self):
+        db = self._mem_db()
+        load.load_table(db, "items", iter([{"id": 1}]))
+        load.load_table(db, "items", iter([{"id": 2}]))  # should not raise
+        count = db.execute("SELECT COUNT(*) FROM items").fetchone()[0]
+        db.close()
+        assert count == 2

@@ -31,6 +31,11 @@ class TestLoadValidConfig:
         assert result["pg_port"] == 1032  # int, not string
         assert result["pg_dbname"] == "iii"
 
+    def test_output_dir_trailing_slash_stored(self, valid_config, monkeypatch, tmp_path):
+        monkeypatch.setenv("OUTPUT_DIR", str(tmp_path) + "/")
+        result = config.load()
+        assert result["output_dir"].endswith("/")
+
     def test_load_defaults_applied(self, valid_config):
         result = config.load()
         assert result["pg_sslmode"] == "require"
@@ -97,6 +102,24 @@ class TestLoadErrors:
         with pytest.raises(FileNotFoundError):
             config.load(str(tmp_path / "nonexistent.json"))
 
+    def test_pg_port_zero_is_valid_int(self, valid_config, monkeypatch):
+        monkeypatch.setenv("PG_PORT", "0")
+        result = config.load()
+        assert result["pg_port"] == 0
+        assert isinstance(result["pg_port"], int)
+
+    def test_pg_port_negative_is_valid_int(self, valid_config, monkeypatch):
+        monkeypatch.setenv("PG_PORT", "-1")
+        result = config.load()
+        assert result["pg_port"] == -1
+        assert isinstance(result["pg_port"], int)
+
+    def test_pg_itersize_zero(self, valid_config, monkeypatch):
+        monkeypatch.setenv("PG_ITERSIZE", "0")
+        result = config.load()
+        assert result["pg_itersize"] == 0
+        assert isinstance(result["pg_itersize"], int)
+
 
 class TestDeprecationWarnings:
     def test_config_json_warns(self, monkeypatch, tmp_path):
@@ -152,6 +175,11 @@ class TestSleepBetweenTables:
         with pytest.raises(ValueError, match="PG_SLEEP_BETWEEN_TABLES"):
             config.load()
 
+    def test_negative_float_is_stored(self, valid_config, monkeypatch):
+        monkeypatch.setenv("PG_SLEEP_BETWEEN_TABLES", "-1.5")
+        result = config.load()
+        assert result["pg_sleep_between_tables"] == -1.5
+
 
 class TestPgConnectionString:
     def test_pg_connection_string_format(self, valid_config):
@@ -169,3 +197,10 @@ class TestPgConnectionString:
         url = config.pg_connection_string(cfg)
         assert "localhost" in url
         assert "iii" in url
+
+    def test_special_chars_in_password(self, valid_config, monkeypatch):
+        monkeypatch.setenv("PG_PASSWORD", "p%40ss:w@rd!")
+        cfg = config.load()
+        url = config.pg_connection_string(cfg)
+        assert url.startswith("postgresql+psycopg://")
+        assert "p%40ss" in url

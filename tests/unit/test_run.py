@@ -2,6 +2,10 @@
 
 import logging
 import sqlite3
+from pathlib import Path
+from unittest.mock import patch
+
+import pytest
 
 from collection_analysis.run import (
     _configure_logging,
@@ -47,6 +51,25 @@ class TestConfigureLogging:
         # restore
         logging.getLogger().setLevel(logging.INFO)
 
+    def test_invalid_log_level_falls_back_to_info(self):
+        cfg = {"log_level": "GARBAGE"}
+        _configure_logging(cfg)
+        assert logging.getLogger().level == logging.INFO
+        # restore
+        logging.getLogger().setLevel(logging.WARNING)
+
+    def test_log_file_path_creates_file(self, tmp_path):
+        log_file = str(tmp_path / "run.log")
+        cfg = {"log_file": log_file, "log_level": "INFO"}
+        _configure_logging(cfg)
+        assert Path(log_file).exists()
+        # cleanup
+        root = logging.getLogger()
+        for h in list(root.handlers):
+            if isinstance(h, logging.FileHandler):
+                h.close()
+                root.removeHandler(h)
+
 
 class TestTimedLoad:
     def _make_db(self):
@@ -66,6 +89,13 @@ class TestTimedLoad:
         rows = [{"id": i} for i in range(100)]
         _, elapsed = _timed_load(db, "elapsed_table", iter(rows))
         assert elapsed >= 0.0
+        db.close()
+
+    def test_exception_from_load_table_propagates(self):
+        db = self._make_db()
+        with patch("collection_analysis.load.load_table", side_effect=RuntimeError("injected error")):
+            with pytest.raises(RuntimeError, match="injected error"):
+                _timed_load(db, "t", iter([{"id": 1}]))
         db.close()
 
 
@@ -120,3 +150,13 @@ class TestLogSummary:
             _log_summary(stats, 5.0)
         assert "Stage summary" in caplog.text
         assert "TOTAL" in caplog.text
+
+    def test_output_contains_stage_names(self, caplog):
+        stats = [
+            {"stage": "record_metadata", "rows": 500, "elapsed_seconds": 1.0, "rows_per_sec": 500.0},
+            {"stage": "bib", "rows": 200, "elapsed_seconds": 0.5, "rows_per_sec": 400.0},
+        ]
+        with caplog.at_level(logging.INFO):
+            _log_summary(stats, 1.5)
+        assert "record_metadata" in caplog.text
+        assert "bib" in caplog.text

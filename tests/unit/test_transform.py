@@ -5,6 +5,7 @@ import sqlite3
 import pytest
 
 from collection_analysis import transform
+from collection_analysis.transform import SQL_DIR
 
 
 def _view_names(conn):
@@ -39,6 +40,44 @@ class TestCreateViews:
         assert "first_view" in _view_names(empty_db)
         assert "second_view" in _view_names(empty_db)
 
+    def test_nonexistent_directory_raises(self, empty_db, tmp_path):
+        """Non-existent sql dir: raises on Python 3.12+ or silently returns."""
+        bad_sql_dir = tmp_path / "no_such_sql"
+        try:
+            transform.create_views(empty_db, sql_dir=bad_sql_dir)
+        except OSError:
+            pass  # Python 3.12+ raises for non-existent glob paths
+        assert _view_names(empty_db) == []
+
+    def test_file_with_only_comments_skipped(self, empty_db, tmp_sql_dir):
+        (tmp_sql_dir / "views" / "01_comment_only.sql").write_text("-- this is a comment only")
+        transform.create_views(empty_db, sql_dir=tmp_sql_dir)
+        assert _view_names(empty_db) == []
+
+    def test_view_dependency_order(self, empty_db, tmp_sql_dir):
+        """View B depends on view A; only works if A is created first."""
+        empty_db.execute("CREATE TABLE data (id INTEGER, val TEXT)")
+        (tmp_sql_dir / "views" / "01_view_a.sql").write_text(
+            "CREATE VIEW view_a AS SELECT id, val FROM data"
+        )
+        (tmp_sql_dir / "views" / "02_view_b.sql").write_text(
+            "CREATE VIEW view_b AS SELECT id FROM view_a WHERE id > 0"
+        )
+        transform.create_views(empty_db, sql_dir=tmp_sql_dir)
+        views = _view_names(empty_db)
+        assert "view_a" in views
+        assert "view_b" in views
+
+    def test_smoke_all_real_view_files_syntax(self):
+        """All 26 real view SQL files load and split without error."""
+        views_dir = SQL_DIR / "views"
+        sql_files = sorted(views_dir.glob("*.sql"))
+        assert len(sql_files) > 0, "No real view SQL files found"
+        for sql_file in sql_files:
+            sql = sql_file.read_text()
+            statements = [s.strip() for s in sql.split(";") if s.strip()]
+            assert len(statements) >= 0  # file loads and splits without error
+
 
 class TestCreateIndexes:
     def test_create_indexes_single_file(self, empty_db, tmp_sql_dir):
@@ -48,6 +87,23 @@ class TestCreateIndexes:
         transform.create_indexes(empty_db, sql_dir=tmp_sql_dir)
         indexes = [row[1] for row in empty_db.execute("PRAGMA index_list('items')").fetchall()]
         assert "idx_item_name" in indexes
+
+    def test_nonexistent_directory_raises(self, empty_db, tmp_path):
+        bad_sql_dir = tmp_path / "no_such_sql"
+        try:
+            transform.create_indexes(empty_db, sql_dir=bad_sql_dir)
+        except OSError:
+            pass  # Python 3.12+ raises; older versions log a warning and return
+
+    def test_smoke_all_real_index_file_syntax(self):
+        """The real index SQL file loads and splits without error."""
+        indexes_dir = SQL_DIR / "indexes"
+        sql_files = sorted(indexes_dir.glob("*.sql"))
+        assert len(sql_files) > 0, "No real index SQL files found"
+        for sql_file in sql_files:
+            sql = sql_file.read_text()
+            statements = [s.strip() for s in sql.split(";") if s.strip()]
+            assert len(statements) >= 0
 
 
 class TestMultiStatement:

@@ -115,3 +115,52 @@ def test_v_recent_runs_ordering(tmp_path):
     ids = [r[0] for r in rows]
     assert ids == sorted(ids, reverse=True)
     db.close()
+
+
+def test_v_stage_trends_returns_rows(tmp_path):
+    db = _open(tmp_path)
+    run_id = start_run(db, "2026-01-01T00:00:00")
+    finish_run(db, run_id, "2026-01-01T00:05:00", 300.0, True, _sample_stats())
+    rows = db.execute("SELECT stage, run_id, elapsed_secs FROM v_stage_trends").fetchall()
+    assert len(rows) > 0
+    assert rows[0][0] is not None  # stage column not null
+    db.close()
+
+
+def test_finish_run_with_empty_stats(tmp_path):
+    db = _open(tmp_path)
+    run_id = start_run(db, "2026-01-01T00:00:00")
+    finish_run(db, run_id, "2026-01-01T00:05:00", 300.0, True, [])
+    stage_count = db.execute("SELECT COUNT(*) FROM stage WHERE run_id = ?", (run_id,)).fetchone()[0]
+    assert stage_count == 0
+    run_row = db.execute("SELECT success FROM run WHERE id = ?", (run_id,)).fetchone()
+    assert run_row[0] == 1
+    db.close()
+
+
+def test_finish_run_nullable_rows_stored_as_null(tmp_path):
+    db = _open(tmp_path)
+    run_id = start_run(db, "2026-01-01T00:00:00")
+    stats = [{"stage": "views", "rows": None, "elapsed_seconds": 0.5, "rows_per_sec": None}]
+    finish_run(db, run_id, "2026-01-01T00:05:00", 300.0, True, stats)
+    rows_val = db.execute("SELECT rows FROM stage WHERE run_id = ?", (run_id,)).fetchone()[0]
+    assert rows_val is None
+    db.close()
+
+
+def test_v_recent_runs_success_label(tmp_path):
+    db = _open(tmp_path)
+    run_id = start_run(db, "2026-01-01T00:00:00")
+    finish_run(db, run_id, "2026-01-01T00:05:00", 300.0, True, [])
+    result = db.execute("SELECT result FROM v_recent_runs WHERE id = ?", (run_id,)).fetchone()[0]
+    assert result == "success"
+    db.close()
+
+
+def test_v_recent_runs_failed_label(tmp_path):
+    db = _open(tmp_path)
+    run_id = start_run(db, "2026-01-01T00:00:00")
+    finish_run(db, run_id, "2026-01-01T00:01:00", 60.0, False, [])
+    result = db.execute("SELECT result FROM v_recent_runs WHERE id = ?", (run_id,)).fetchone()[0]
+    assert result == "failed"
+    db.close()
