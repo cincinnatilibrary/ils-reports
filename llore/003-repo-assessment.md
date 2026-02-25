@@ -2,7 +2,7 @@
 id: "003"
 title: "Comprehensive Repository Assessment"
 date: "2026-02-25"
-status: "in-progress"
+status: "completed"
 tags: [assessment, review, quality]
 ---
 
@@ -17,7 +17,7 @@ tags: [assessment, review, quality]
 | 2 | Run & Verify | Complete | 2026-02-25 |
 | 3 | Rubric Assessment A–D | Complete | 2026-02-25 |
 | 4 | Rubric Assessment E–I | Complete | 2026-02-25 |
-| 5 | Synthesis & Final Report | Pending | — |
+| 5 | Synthesis & Final Report | Complete | 2026-02-25 |
 
 ---
 
@@ -745,4 +745,366 @@ lint:
 
 ## Sprint 5: Synthesis & Final Report
 
-*(pending)*
+### Deliverable 1: Executive Summary
+
+1. **The project is mostly on the right track.** Architecture is clean, ETL boundaries are clear, the atomic swap pattern is correct, and the codebase is navigable. A new contributor can understand the full pipeline in under an hour.
+2. **146 unit tests pass at 88% coverage,** but `run.py:main()` — the actual pipeline entry point — has 0% unit test coverage. The 88% masks this because helper functions are tested individually.
+3. **CI has a critical enforcement gap:** linting (ruff, sqlfluff, djlint) is only enforced via pre-commit hooks, not in CI. A developer who pushes with `--no-verify` bypasses all lint checks.
+4. **One real bug:** `pg_connection_string()` doesn't URL-encode the password. Passwords with `@`, `/`, or `%` will produce a malformed connection URL. One-line fix.
+5. **One real bug (minor):** `finalize_db()` creates WAL sidecar files for `.db.new`, then `swap_db()` renames only the main file, orphaning `.db.new-wal` and `.db.new-shm` on disk.
+6. **The extraction layer works but has significant boilerplate.** 10 paginated functions share identical structure; a `_paginate()` helper would remove ~150 lines.
+7. **No data validation gates exist.** Corrupted source data flows silently from PostgreSQL through to the live SQLite DB. For a trusted internal source this is acceptable, but a post-build schema assertion would catch schema drift.
+8. **Telemetry is above-average** for a pipeline of this size. `pipeline_runs.db` with per-stage timing, 3 analytical views, and persistent history across runs.
+9. **`sqlite-fts4==1.0.1` is a core dependency that is never imported.** Should be moved to the `datasette` optional group or removed.
+10. **View correctness tests are entirely absent.** 26 SQL views are created but never queried to verify output. This is the highest-leverage missing test category.
+
+### Deliverable 2: Top Risks / Foot-guns (Ranked)
+
+#### 1. Password not URL-encoded (HIGH)
+
+- **Severity:** HIGH
+- **Impact:** Pipeline fails to connect to Sierra if password contains special characters
+- **Likelihood:** Medium — depends on password policy
+- **Location:** `config.py:174-177`
+- **Fix:** Replace f-string with `sqlalchemy.engine.URL.create()`
+
+```python
+# Before (config.py:172-178)
+def pg_connection_string(cfg: dict) -> str:
+    return (
+        f"postgresql+psycopg://{cfg['pg_username']}:{cfg['pg_password']}"
+        f"@{cfg['pg_host']}:{cfg['pg_port']}/{cfg['pg_dbname']}"
+        f"?sslmode={cfg['pg_sslmode']}"
+    )
+
+# After
+from sqlalchemy.engine import URL
+
+def pg_connection_string(cfg: dict) -> str:
+    return URL.create(
+        drivername="postgresql+psycopg",
+        username=cfg["pg_username"],
+        password=cfg["pg_password"],
+        host=cfg["pg_host"],
+        port=int(cfg["pg_port"]),
+        database=cfg["pg_dbname"],
+        query={"sslmode": cfg["pg_sslmode"]},
+    ).render_as_string(hide_password=False)
+```
+
+#### 2. CI doesn't run linters (MED)
+
+- **Severity:** MED
+- **Impact:** Lint violations can merge to main if pre-commit is bypassed
+- **Likelihood:** Medium — any `--no-verify` push
+- **Location:** `.github/workflows/ci.yml`
+- **Fix:** Add a `lint` job (5 lines of YAML, `scripts/lint.sh` already exists)
+
+#### 3. Naive semicolon splitting in transform.py (MED)
+
+- **Severity:** MED
+- **Impact:** Future SQL files with semicolons in string literals will silently produce broken statements
+- **Likelihood:** Low today (current SQL files are clean), but increases as views grow in complexity
+- **Location:** `transform.py:46`
+- **Fix:** Use `sqlite3` executescript() or a proper SQL parser. Minimal change: `db.executescript(sql)` handles multi-statement files natively.
+
+```python
+# Before (transform.py:42-49)
+for sql_file in sql_files:
+    sql = sql_file.read_text()
+    for statement in sql.split(";"):
+        statement = statement.strip()
+        if statement:
+            db.execute(statement)
+
+# After
+for sql_file in sql_files:
+    sql = sql_file.read_text()
+    db.executescript(sql)
+```
+
+Note: `executescript()` issues an implicit `COMMIT` before executing. With `journal_mode=OFF` this is a no-op, but verify no side effects with WAL mode during finalize.
+
+#### 4. SQLite connection not closed on failure (MED)
+
+- **Severity:** MED
+- **Impact:** File descriptor leak and stale `.db.new` file left with open write lock
+- **Likelihood:** Occurs on every pipeline failure
+- **Location:** `run.py:112-225`
+- **Fix:** Add `db.close()` in the finally block:
+
+```python
+# run.py, in the finally block (after line 225):
+finally:
+    if "db" in locals():
+        db.close()
+    # ... existing telemetry code
+```
+
+#### 5. No data validation gates (MED)
+
+- **Severity:** MED
+- **Impact:** Schema drift or source corruption silently propagates to the live DB
+- **Likelihood:** Low (Sierra schema is stable), but non-zero
+- **Location:** `load.py:load_table()` (no validation) and `run.py` (no post-build checks)
+- **Fix:** Add a post-build assertion that verifies expected tables exist and have >0 rows. Quick win: after `finalize_db()`, run `PRAGMA integrity_check` and verify table list matches expectations.
+
+#### 6. `.all()` memory pattern (LOW)
+
+- **Severity:** LOW
+- **Impact:** Each pagination page materializes up to 15,000 rows in memory. For wide tables (bib: ~20 columns with JSON arrays), peak memory per page could be 100-200MB.
+- **Likelihood:** Low — current itersize (15,000) is reasonable
+- **Location:** `extract.py` (all paginated functions, e.g., line 57)
+- **Fix:** No change needed at current scale. If memory becomes an issue, switch to server-side cursors with `stream_results=True` on the SQLAlchemy connection. This requires `yield_per()` instead of `.all()`.
+
+#### 7. Orphaned WAL sidecar files (LOW)
+
+- **Severity:** LOW
+- **Impact:** Stale `.db.new-wal` and `.db.new-shm` files accumulate in output directory
+- **Likelihood:** Occurs on every successful build
+- **Location:** `load.py:finalize_db()` + `swap_db()`
+- **Fix:** Checkpoint WAL before swap, or don't switch to WAL until after swap:
+
+```python
+# Option A: checkpoint before swap (in finalize_db, before FINAL_PRAGMAS)
+db.execute("PRAGMA wal_checkpoint(TRUNCATE)")
+
+# Option B: set WAL after swap (in a new function or at end of run.py)
+# Reopen the final DB, set WAL, close
+```
+
+### Deliverable 3: Complexity Audit
+
+#### 3.1 Extract.py — 10 identical pagination loops
+
+| Option | Effort | Lines Saved | Risk |
+| --- | --- | --- | --- |
+| **Keep as-is** | 0 | 0 | Each function is explicit and independently testable |
+| **Minimal: `_paginate()` helper** | S | ~150 | Small refactor; tests become slightly more abstract |
+| **Bigger: data-driven registry** | M | ~200 | Adds indirection; harder to grep for specific tables |
+
+**Recommendation:** Minimal change. The `_paginate()` helper is a clear win:
+
+```python
+def _paginate(pg_conn, sql_name, cursor_col, params, itersize, label):
+    sql = text(_load_sql(sql_name))
+    id_val = 0
+    total = 0
+    while True:
+        bind = {**params, "id_val": id_val, "limit_val": itersize}
+        rows = pg_conn.execute(sql, bind).mappings().all()
+        if not rows:
+            break
+        yield from rows
+        total += len(rows)
+        id_val = rows[-1][cursor_col]
+        logger.info(f"  {label}: {total} rows (cursor at id {id_val})")
+```
+
+Then each function becomes:
+
+```python
+def extract_record_metadata(pg_conn, itersize=5000):
+    yield from _paginate(
+        pg_conn, "record_metadata", "record_id",
+        {"target_date": _TARGET_DATE}, itersize, "record_metadata",
+    )
+```
+
+#### 3.2 Run.py — 21 hardcoded (name, gen) tuples
+
+| Option | Effort | Lines Saved | Risk |
+| --- | --- | --- | --- |
+| **Keep as-is** | 0 | 0 | Explicit ordering, easy to read |
+| **Minimal: module-level constant** | S | 0 (reorganize) | Separates data from logic |
+| **Bigger: auto-discover from SQL** | M | ~30 | Magic; harder to understand ordering |
+
+**Recommendation:** Keep as-is. The explicit list makes the extraction order obvious. 43 lines is not excessive for 21 tables.
+
+#### 3.3 Load.py — f-string SQL construction
+
+| Option | Effort | Lines Saved | Risk |
+| --- | --- | --- | --- |
+| **Keep as-is** | 0 | 0 | Works correctly; names from trusted source |
+| **Minimal: validate table/column names** | S | -5 (adds code) | Catches unexpected characters |
+| **Bigger: use sqlite-utils** | M | ~20 | Adds dependency; changes API |
+
+**Recommendation:** Keep as-is, but add a one-line validation:
+
+```python
+# At top of load_table(), before CREATE TABLE
+if not all(c.isalnum() or c == "_" for c in table_name):
+    raise ValueError(f"Invalid table name: {table_name!r}")
+```
+
+### Deliverable 4: Testing & Documentation Gap Analysis
+
+#### Testing gaps (ranked by leverage)
+
+| Gap | Leverage | Effort | Description |
+| --- | --- | --- | --- |
+| View correctness tests | **HIGH** | M | Load known data into base tables, create views, query views, assert expected output. Would catch SQL logic bugs in 26 views. |
+| `main()` smoke test | **HIGH** | S | Patch `create_engine` to return mock, verify pipeline completes. Would catch orchestration regressions in CI. |
+| Schema assertion test | MED | S | After build, verify expected tables/columns/indexes exist. Would catch schema drift. |
+| Lint job in CI | MED | S | `scripts/lint.sh` already exists; 5 lines of YAML. |
+| Post-build `PRAGMA integrity_check` | MED | S | One-line addition to `run.py` after `finalize_db()`. |
+| Integration tests in CI | LOW | L | Requires PostgreSQL service in GitHub Actions. Valuable but complex. |
+
+#### Documentation gaps (ranked by leverage)
+
+| Gap | Leverage | Effort | Description |
+| --- | --- | --- | --- |
+| Operational runbook | HIGH | M | What to do at 2am: logs to check, recovery steps, verification commands |
+| CONTRIBUTING.md | MED | S | How to add a table, add a view, run integration tests |
+| Data lineage map | MED | M | Sierra source table → SQLite table → Datasette view |
+| README module count fix | LOW | S | Says "4 core modules" but there are 6 |
+
+### Deliverable 5: Prioritized Action Plan
+
+#### Quick wins (this week)
+
+| # | Action | Effort | Payoff | Location |
+| --- | --- | --- | --- | --- |
+| 1 | URL-encode password in `pg_connection_string` | S | Fixes a real bug | `config.py:172-178` |
+| 2 | Add lint job to CI | S | Closes enforcement gap | `.github/workflows/ci.yml` |
+| 3 | Close SQLite `db` in `finally` block | S | Fixes resource leak on failure | `run.py:225` |
+| 4 | Move `sqlite-fts4` to datasette optional group | S | Removes unused core dep | `pyproject.toml:14` |
+| 5 | Clean up stale artifacts (`test.db`, add to `.gitignore`) | S | Reduces confusion | Project root |
+| 6 | Fix 3 ruff lint findings in test files | S | Makes `scripts/lint.sh` pass | `test_run.py:110`, `test_transform.py:46,93` |
+
+#### Next sprint
+
+| # | Action | Effort | Payoff | Location |
+| --- | --- | --- | --- | --- |
+| 7 | Extract `_paginate()` helper in extract.py | M | Removes ~150 lines of duplication | `extract.py` |
+| 8 | Add view correctness tests (top 5 views) | M | Catches SQL logic bugs in CI | `tests/unit/test_views.py` (new) |
+| 9 | Add `main()` smoke test | S | Covers 49 uncovered lines in run.py | `tests/unit/test_run.py` |
+| 10 | Set `PRAGMA user_version` after build | S | Enables quick schema version checks | `load.py:finalize_db()` |
+| 11 | Fix orphaned WAL sidecar files | S | Clean output directory | `load.py:finalize_db()` |
+| 12 | Replace `sql.split(";")` with `executescript()` | S | Prevents semicolon foot-gun | `transform.py:46` |
+
+#### Longer-term improvements
+
+| # | Action | Effort | Payoff | Location |
+| --- | --- | --- | --- | --- |
+| 13 | Add post-build validation gate (schema + integrity + row counts) | M | Catches source corruption | `run.py` (new function) |
+| 14 | Add mypy/pyright type checking | M | Catches type errors; IDE support | `pyproject.toml`, CI |
+| 15 | Write operational runbook | M | 2am operator self-service | `docs/operations.md` (new) |
+| 16 | Add index coverage for `circ_agg` and `item_message` tables | S | Improves Datasette query performance | `sql/indexes/01_indexes.sql` |
+| 17 | Move `logging.basicConfig()` into `main()` | S | Prevents test interference | `run.py:34-38` |
+| 18 | Add integration tests to CI (PostgreSQL service) | L | Gates SQL correctness | `.github/workflows/ci.yml` |
+
+### Deliverable 6: Concrete Recommendations
+
+#### Recommendation 1: Fix `pg_connection_string` (config.py:172-178)
+
+Replace f-string URL construction with SQLAlchemy's `URL.create()`:
+
+```python
+from sqlalchemy.engine import URL
+
+def pg_connection_string(cfg: dict) -> str:
+    """Build a SQLAlchemy-compatible PostgreSQL connection URL from config."""
+    return URL.create(
+        drivername="postgresql+psycopg",
+        username=cfg["pg_username"],
+        password=cfg["pg_password"],
+        host=cfg["pg_host"],
+        port=int(cfg["pg_port"]),
+        database=cfg["pg_dbname"],
+        query={"sslmode": cfg["pg_sslmode"]},
+    ).render_as_string(hide_password=False)
+```
+
+#### Recommendation 2: Add lint job to CI (.github/workflows/ci.yml)
+
+```yaml
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v4
+        with:
+          enable-cache: true
+      - run: uv sync --all-extras
+      - run: scripts/lint.sh
+```
+
+#### Recommendation 3: Close SQLite db on failure (run.py:225)
+
+```python
+    finally:
+        if "db" in locals():
+            db.close()
+        elapsed = time.time() - start
+        telemetry.finish_run(
+            tel_db,
+            run_id,
+            # ... rest unchanged
+```
+
+#### Recommendation 4: Replace sql.split(";") (transform.py:42-49)
+
+```python
+    for sql_file in sql_files:
+        logger.info(f"Executing {sql_file.name} ...")
+        sql = sql_file.read_text()
+        db.executescript(sql)
+```
+
+#### Recommendation 5: Move sqlite-fts4 to datasette group (pyproject.toml:10-15)
+
+```toml
+# Before
+dependencies = [
+    "SQLAlchemy>=2.0",
+    "psycopg[binary]>=3.1",
+    "python-dotenv>=1.0",
+    "sqlite-fts4==1.0.1",
+]
+
+# After
+dependencies = [
+    "SQLAlchemy>=2.0",
+    "psycopg[binary]>=3.1",
+    "python-dotenv>=1.0",
+]
+
+[project.optional-dependencies]
+datasette = ["datasette>=1.0a1", "datasette-leaflet>=0.2", "sqlite-fts4>=1.0.1"]
+```
+
+#### Recommendation 6: Add `_paginate()` helper (extract.py)
+
+```python
+def _paginate(pg_conn, sql_name, cursor_col, params, itersize, label):
+    """Generic cursor-based pagination over a Sierra query."""
+    sql = text(_load_sql(sql_name))
+    id_val = 0
+    total = 0
+    while True:
+        bind = {**params, "id_val": id_val, "limit_val": itersize}
+        rows = pg_conn.execute(sql, bind).mappings().all()
+        if not rows:
+            break
+        yield from rows
+        total += len(rows)
+        id_val = rows[-1][cursor_col]
+        logger.info(f"  {label}: {total} rows (cursor at id {id_val})")
+
+
+def extract_record_metadata(pg_conn, itersize=5000):
+    """Yield record_metadata rows."""
+    yield from _paginate(
+        pg_conn, "record_metadata", "record_id",
+        {"target_date": _TARGET_DATE}, itersize, "record_metadata",
+    )
+
+# ... same pattern for the other 9 paginated functions
+```
+
+---
+
+## Assessment Complete
+
+This assessment reviewed 1,063 lines of production Python, 49 SQL files, ~2,239 lines of tests, CI/CD configuration, documentation, and a live sample database. The project is well-architected with clear ETL boundaries, correct atomic swap semantics, and above-average telemetry. The priority fixes are: (1) URL-encode password, (2) add lint CI job, (3) close db on failure, (4) add view correctness tests.
