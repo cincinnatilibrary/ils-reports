@@ -1,5 +1,7 @@
 # ils-reports
 
+![Coverage](coverage-badge.svg)
+
 Data pipelines from the Cincinnati & Hamilton County Public Library (CHPL)
 Sierra ILS (PostgreSQL) to SQLite databases for reporting and public analysis.
 

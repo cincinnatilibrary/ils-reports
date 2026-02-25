@@ -32,5 +32,12 @@ logs/
 # OS
 .DS_Store
 
+# Coverage artifacts
+coverage.xml
+docs/coverage/
+
+# MkDocs build output
+site/
+
 # Rust build artifacts
 reference/**/target/

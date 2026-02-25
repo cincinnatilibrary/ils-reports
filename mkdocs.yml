@@ -23,6 +23,7 @@ nav:
       - Link Tables: tables/link_tables.md
       - Views: tables/views.md
   - Development: development.md
+  - Testing: testing.md
 
 plugins:
   - search
