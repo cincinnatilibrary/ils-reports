@@ -15,8 +15,8 @@ tags: [assessment, review, quality]
 | 0 | Housekeeping | Complete | 2026-02-25 |
 | 1 | Inventory & Deep Code Review | Complete | 2026-02-25 |
 | 2 | Run & Verify | Complete | 2026-02-25 |
-| 3 | Rubric Assessment A–D | Pending | — |
-| 4 | Rubric Assessment E–I | Pending | — |
+| 3 | Rubric Assessment A–D | Complete | 2026-02-25 |
+| 4 | Rubric Assessment E–I | Complete | 2026-02-25 |
 | 5 | Synthesis & Final Report | Pending | — |
 
 ---
@@ -474,13 +474,272 @@ Stage timing from run 8 (most recent success, EXTRACT_LIMIT=500):
 
 ## Sprint 3: Rubric Assessment A–D
 
-*(pending)*
+### A) Architecture & Complexity
+
+#### Strengths
+
+- **Clear ETL boundaries.** Extract (extract.py) yields rows, Load (load.py) writes SQLite, Transform (transform.py) applies SQL files. Each module has a single responsibility. No module imports another except run.py, which orchestrates.
+- **Flat, navigable structure.** 6 modules in one package, 49 SQL files in two directories. A new contributor can understand the full pipeline in under an hour.
+- **No unnecessary abstractions.** No ORM for transforms, no plugin system, no abstract base classes. The code is straightforward procedural Python.
+- **SQL files as the unit of transformation.** Views and indexes are plain `.sql` files with numeric prefixes for ordering. Easy to read, diff, and review.
+- **Atomic swap pattern.** Build to `.db.new`, swap only on success. This is the correct pattern for full-rebuild ETL.
+
+#### Risks / foot-guns
+
+- **Pagination boilerplate duplication** (`extract.py`): 10 paginated functions share identical structure — `while True` → `.all()` → `yield from` → advance cursor. Only the SQL file name, cursor column, and parameter set differ. This is ~150 lines of repetition. Not a correctness issue today, but a maintenance burden when behavior needs to change (e.g., adding server-side cursors).
+- **21 hardcoded (name, gen) tuples** (`run.py:128-171`): Adding or removing a table requires editing a 43-line list in `main()`. No validation that the list matches available SQL files or extraction functions.
+- **Helper functions in run.py** (`_timed_load`, `_write_run_stats`, `_configure_logging`, `_log_summary`): These are well-placed in run.py because they're orchestration concerns, not reusable utilities. Keep as-is.
+
+#### Simplification opportunities
+
+**Pagination boilerplate** (extract.py):
+
+- **Keep as-is:** 10 functions are explicit and greppable. Each is independently testable.
+- **Minimal change:** Extract `_paginate(pg_conn, sql_name, cursor_col, params, itersize)` helper that encapsulates the while-loop. Reduce 10 functions to 10 one-liner calls. ~150 lines removed.
+- **Bigger refactor:** Data-driven registry mapping table names to (sql_file, cursor_col, params). `run.py` iterates the registry. Not recommended — adds indirection without meaningful benefit.
+
+**Table list in run.py:**
+
+- **Keep as-is:** Explicit list is greppable and makes the extraction order obvious.
+- **Minimal change:** Move to a module-level constant `EXTRACTION_STAGES` as a list of named tuples. Still explicit but separated from `main()`.
+- **Bigger refactor:** Auto-discover from SQL files + extract function naming convention. Over-engineered for 21 tables.
+
+### B) ETL Correctness & Data Guarantees
+
+#### Data contract summary
+
+The pipeline guarantees:
+
+1. **Idempotency** — full rebuild + atomic swap means re-running produces the same result and never corrupts the live DB. Confirmed correct.
+2. **Full rebuild** — `_TARGET_DATE = "1969-01-01"` ensures all records are fetched. No incremental logic exists or is needed.
+3. **Atomic delivery** — `os.replace()` is atomic on POSIX. The live DB is either the old version or the new version, never a partial build.
+4. **Deterministic row content** — each row comes from a specific PostgreSQL query with parameterized WHERE clauses. Same source data produces same rows.
+
+#### Correctness risks
+
+| Risk | Severity | Impact | Location | Fix |
+| --- | --- | --- | --- | --- |
+| **No ORDER BY in paginated queries** | MED | Row order within the output DB is undefined. Different PostgreSQL versions or plan changes could reorder rows. Doesn't affect correctness (views use their own ORDER BY) but makes diffing builds harder. | `sql/queries/*.sql` | Add `ORDER BY <cursor_col>` to all paginated queries. Already implicitly ordered by the `WHERE id > :id_val` pagination, but explicit is safer. |
+| **Missing ORDER BY in LIMIT 1 subqueries** | MED | `hold.sql` and `16_new_titles_view.sql` use `LIMIT 1` without `ORDER BY`. PostgreSQL returns an arbitrary row; results are non-deterministic. | `sql/queries/hold.sql`, `sql/views/16_new_titles_view.sql` | Add explicit `ORDER BY` to every `LIMIT` subquery. |
+| **No schema validation on SQLite side** | MED | `load_table()` creates untyped columns from the first row's keys. If a source query changes its column set (e.g., after a Sierra upgrade), the mismatch silently propagates. No column type, NOT NULL, or CHECK constraints. | `load.py:116-121` | For a full-rebuild pipeline, this is an acceptable tradeoff. Consider adding a post-build schema assertion step (compare actual columns against expected). |
+| **`_serialize` ignores unexpected types** | LOW | `_serialize(v)` handles dict, list, datetime, date, and passes everything else through. If PostgreSQL returns a `Decimal`, `UUID`, or `memoryview`, it passes through to SQLite which may store it as a blob or string. | `load.py:108-113` | LOW risk — Sierra's schema is well-known. Could add a catch-all `else: str(v)` for safety. |
+| **Deduplication** | NONE | Pagination-by-id prevents duplicates. Each page fetches `WHERE id > :id_val ORDER BY id LIMIT :limit_val`. No row can appear in two pages. Confirmed correct for all 10 paginated functions. | — | — |
+| **Error strategy** | OK | Single try/finally wrapping the entire pipeline. On any failure: telemetry records the failure, `.db.new` is left on disk (cleaned up on next run by `open_build_db`), live DB is untouched. This is correct for a full-rebuild pipeline. | `run.py:112-237` | Consider `db.close()` in finally (see C2 in Sprint 1). |
+
+### C) SQLite Design & Performance
+
+#### SQLite posture summary
+
+| Setting | Build Phase | Final Phase | Assessment |
+| --- | --- | --- | --- |
+| `journal_mode` | OFF | WAL | Correct — no journal during build, WAL for Datasette reads |
+| `synchronous` | OFF | NORMAL | Correct — speed during build, safety for serving |
+| `cache_size` | -2,000,000 (2GB) | (unchanged) | Aggressive but appropriate for a build machine |
+| `page_size` | 8192 | (unchanged) | Reasonable for mixed row sizes. 32768 would be better for large JSON blobs but 8KB is fine. |
+| `mmap_size` | 30,000,000,000 | (unchanged) | 30GB is aggressive; silently ignored if not available. Fine for build. |
+| `temp_store` | MEMORY | (unchanged) | Correct for build performance |
+| `locking_mode` | EXCLUSIVE | NORMAL | Correct — exclusive during build, shared for serving |
+
+Overall: **Build PRAGMAs are well-chosen.** The pipeline follows the recommended SQLite bulk-loading pattern.
+
+#### Schema assessment
+
+- **No column types:** `CREATE TABLE "item" ("item_record_id", "barcode", ...)` — all columns are typeless. SQLite's dynamic typing makes this work, but Datasette users get no type hints, and tools like `sqlite-utils` can't infer types. Acceptable for this use case since the data comes from a known schema.
+- **No constraints:** No PRIMARY KEY, NOT NULL, UNIQUE, CHECK, or FOREIGN KEY constraints. This is an intentional tradeoff: the pipeline does a full rebuild, so constraints add build time without catching errors (the source is trusted). The live DB is read-only via Datasette.
+- **No `PRAGMA user_version`:** No schema versioning. The `_pipeline_run` table records run metadata, which partially fills this role. Consider setting `PRAGMA user_version = <unix_timestamp>` for quick version checks.
+
+#### Index coverage analysis
+
+42 indexes cover 10 of 21 tables. Key coverage gaps:
+
+| Table | Missing indexes | Impact |
+| --- | --- | --- |
+| `circ_agg` | No indexes at all | Views `05_branch_30_day_circ_view` and `22_circ_agg_branch_view` query this table |
+| `item_message` | No indexes | `04_item_view` joins on `item_message` |
+| `hold` | Missing `ptype`, `is_frozen` | `19_active_holds_view` filters on these |
+| `item` | Missing `item_record_id` | Several views join on this; only `item_record_num` is indexed |
+
+No covering indexes or partial indexes exist. For a read-heavy Datasette workload, covering indexes on the most-queried views could significantly improve response time.
+
+#### Transaction strategy
+
+- `load_table()` commits per batch (`db.commit()` at `load.py:106`). With `journal_mode=OFF`, each commit is a no-op (no journal to flush). This is correct for the build phase.
+- `finalize_db()` runs `ANALYZE` then sets WAL mode. ANALYZE generates `sqlite_stat1` rows used by the query planner.
+- **Orphaned WAL sidecar bug** (documented in Sprint 2.6): `finalize_db()` creates WAL files for `.db.new`, then `swap_db()` renames only the main file. The `.db.new-wal` and `.db.new-shm` files are orphaned. Fix: either checkpoint WAL before swap, or don't switch to WAL until after swap.
+
+### D) Packaging & uv Hygiene
+
+#### uv health check
+
+1. **`pyproject.toml` quality: GOOD.** Metadata complete, build backend correct, scripts entrypoint defined, dependency groups properly separated (core / datasette / docs / dev).
+2. **`sqlite-fts4==1.0.1` is an unused dependency.** Not imported in any production module or SQL file. Likely intended for Datasette's full-text search plugin but should be moved to the `[project.optional-dependencies] datasette` group, or removed entirely if not used.
+3. **`uv.lock` is checked in: YES.** Reproducible builds across machines and CI. Correct.
+4. **Dev dependencies use PEP 735 `[dependency-groups]`: GOOD.** Modern pattern, properly supported by uv.
+5. **`detect-secrets` is not in pyproject.toml.** Only available via `--with detect-secrets` in CI. Inconsistent with other dev tools — should be added to dev dependencies for local use.
+6. **No type checking (mypy/pyright).** Not in dev deps, not in CI, not in pre-commit. For a 1063-line codebase with 6 modules, the value is moderate but the gap will grow with the codebase.
+7. **Ruff version alignment: OK.** `pyproject.toml` says `>=0.4.0`, pre-commit pins `v0.4.7`. Compatible, but the pre-commit pin will drift from what developers run locally. Consider pinning in both places or using `rev: v0.4.0` in pre-commit.
+8. **`requires-python = ">=3.10"`: GOOD.** Matches CI matrix (3.10, 3.11, 3.12, 3.13).
+9. **Hatchling build config: CORRECT.** `packages = ["collection_analysis"]` is required because the project name (`ils-reports`) differs from the package directory (`collection_analysis`).
+10. **No release automation.** No version bumping, no changelog, no PyPI publishing. Appropriate — this is an internal pipeline, not a library.
 
 ---
 
 ## Sprint 4: Rubric Assessment E–I
 
-*(pending)*
+### E) Testing Strategy
+
+#### Test pyramid assessment
+
+| Level | Count | CI | Quality |
+| --- | --- | --- | --- |
+| Unit tests | ~144 | Yes (4 Python versions) | Good — covers all modules |
+| Integration tests | ~25 | **No** (require PostgreSQL) | Comprehensive but never gate PRs |
+| E2E tests | 0 | No | `main()` has 0% unit coverage; integration tests cover it but not in CI |
+| View correctness tests | 0 | No | Views are created but never queried to verify output |
+| Property-based tests | 0 | No | Not needed at this scale |
+
+#### Coverage analysis
+
+Overall 88.36% exceeds the 85% threshold. But this masks a critical gap:
+
+- `run.py:main()` (lines 91-238, the entire pipeline orchestration) has **0% unit test coverage**
+- The 88% comes from testing helper functions (`_timed_load`, `_configure_logging`, etc.) and other modules at 97-100%
+- `main()` is only tested in integration tests that never run in CI
+
+This means CI can pass with a completely broken `main()` function.
+
+#### Test quality patterns
+
+- **Behavioral tests:** `test_load.py` and `test_telemetry.py` are genuinely behavioral — they verify outcomes (rows inserted, PRAGMA values, file created).
+- **Structural tests:** Many `test_extract.py` tests are structural — they verify that a mock was called with expected parameters rather than testing actual query results. This is inherent to unit-testing database code.
+- **Fixture design:** Excellent. `conftest.py` uses `yield` with cleanup, `monkeypatch.setenv` for isolation, optional PostgreSQL fixtures with graceful skip.
+
+#### Missing test categories
+
+1. **`main()` smoke test** — even a minimal test that patches `create_engine` and verifies the pipeline runs to completion would catch orchestration regressions
+2. **View correctness tests** — load known data, create views, query views, assert expected results. This is the highest-leverage missing test category.
+3. **Schema assertion test** — verify that `current_collection.db` has the expected tables, columns, and indexes after a build
+
+### F) Observability & Operations
+
+#### Logging assessment
+
+- **Format:** `%(asctime)s  %(levelname)-8s  %(message)s` — clear, includes timestamp
+- **Levels used:** INFO for progress, WARNING for empty tables and sample mode, DEBUG for sleep-between-tables
+- **Per-stage progress:** Each extraction function logs row count at each page (`record_metadata: 500 rows (cursor at id 12345)`)
+- **Stage summary table:** `_log_summary()` prints a formatted table with rows, seconds, and rows/sec per stage
+
+**Issue:** `logging.basicConfig()` at `run.py:34` executes at import time. This affects any code that imports `run`, including tests. Should be inside `main()`.
+
+#### Telemetry assessment
+
+- **`pipeline_runs.db`** with `run` and `stage` tables — records every run with per-stage timing. Persists across runs.
+- **3 views** (`v_stage_summary`, `v_recent_runs`, `v_stage_trends`) — useful for monitoring trends
+- **Success/failure tracking** — `try/finally` ensures telemetry records even on failure
+
+This is above-average for an ETL pipeline of this size.
+
+#### "2am operator" checklist
+
+What an operator gets today:
+
+- Pipeline.log with timestamped progress (GOOD)
+- Stage summary table in log output (GOOD)
+- `pipeline_runs.db` with historical timing (GOOD)
+- `.db.new` left on disk on failure (useful for debugging)
+
+What's missing:
+
+- **No alerting integration** — operator must check logs manually
+- **No `PRAGMA integrity_check` after build** — corrupt output could be swapped in
+- **SQLite connection not closed on failure** (`run.py` — see C2)
+- **Exit code:** `main()` doesn't set `sys.exit(1)` on failure — it relies on exception propagation, which works but could be clearer
+- **No row count validation** — if a table returns 0 rows (source outage), it's logged as a warning but the build continues and swaps
+
+#### Config posture
+
+- **Primary:** Environment variables (clean, 12-factor compliant)
+- **Fallback:** config.json with DeprecationWarning (good migration path)
+- **Validation:** Required keys checked, types coerced with clear error messages
+- **Defaults:** Sensible (sslmode=require, itersize=15000, log_level=INFO)
+
+### G) Security & Safety
+
+#### Ranked safety concerns
+
+| # | Severity | Issue | Location | Mitigation |
+| --- | --- | --- | --- | --- |
+| 1 | **HIGH** | Password not URL-encoded in connection string | `config.py:174-177` | Use `sqlalchemy.engine.URL.create()` instead of f-string. One-line fix. |
+| 2 | **MED** | `hold.sql` extracts patron metadata (ptype, home library, block code) served publicly via Datasette | `sql/queries/hold.sql` | Review with library data governance. Ptype codes are not directly PII but could narrow identification in small populations. |
+| 3 | **LOW** | f-string SQL for table/column names in load.py | `load.py:100-104,119` | Names come from hardcoded Sierra schema, not user input. Risk is theoretical. Could use parameterized DDL but SQLite doesn't support `?` for identifiers. |
+| 4 | **LOW** | Naive `sql.split(";")` in transform.py | `transform.py:46` | Current SQL files don't contain semicolons in strings. Would break if future SQL includes string literals with semicolons. |
+
+#### Supply chain posture
+
+- **4 core dependencies** — minimal surface area
+- **`uv.lock` checked in** — reproducible builds
+- **`detect-secrets` pre-commit hook** — prevents credential leaks
+- **`.secrets.baseline`** — tracked, allows audit
+
+Rating: **GOOD** for a pipeline of this size.
+
+### H) Documentation & Developer Experience
+
+#### Documentation inventory
+
+| Document | Quality | Notes |
+| --- | --- | --- |
+| `README.md` (131 lines) | Good | Recently rewritten. Clear setup, architecture table, config reference. Minor: says "4 core modules" but lists 6. |
+| `CLAUDE.md` (140 lines) | Excellent | Comprehensive for AI-assisted development. Includes arch decisions, workflow, config reference. |
+| `plan.md` | Good | Design decisions documented before implementation. |
+| `docs/` MkDocs site (7 pages) | Good | Pipeline architecture, configuration, data dictionary with table docs, development guide. |
+| `llore/` (2 existing docs) | Good | Informal ADR system for performance assessments. |
+
+#### Missing documentation
+
+1. **Operational runbook** — what to do when the pipeline fails at 2am. Which logs to check, how to recover, how to verify the output DB.
+2. **CONTRIBUTING.md** — how to add a new extraction table, how to add a new view, how to run integration tests.
+3. **ADR system** — `llore/` is an informal alternative but doesn't follow a standard format (e.g., MADR).
+4. **Data lineage** — no documentation mapping Sierra source tables to SQLite output tables to Datasette views. The reference notebook is the authoritative source but not structured for quick lookup.
+
+### I) CI/CD & Quality Gates
+
+#### CI coverage
+
+| Check | In CI | In pre-commit | Gap |
+| --- | --- | --- | --- |
+| Unit tests | Yes (3.10-3.13) | No | — |
+| Coverage threshold (85%) | Yes | No | — |
+| Ruff linting | **No** | Yes | **CI doesn't run linters** — only enforced locally via pre-commit |
+| SQLfluff linting | **No** | Yes | Same gap |
+| djlint (templates) | **No** | Yes (local hook) | Same gap |
+| detect-secrets | Yes | Yes | — |
+| Type checking | **No** | **No** | Not enforced anywhere |
+| Integration tests | **No** | No | Require PostgreSQL; not in CI |
+| Package install check | **No** | No | Never verified that `uv pip install .` works |
+| Artifact validation | **No** | No | No smoke test of built DB |
+
+#### Pre-commit / CI alignment
+
+**Critical gap:** CI only runs `scripts/test.sh --cov` and `detect-secrets`. All linting (ruff, sqlfluff, djlint) is only enforced via pre-commit hooks. If a developer pushes without running pre-commit (or uses `--no-verify`), lint violations go undetected.
+
+**Fix:** Add a `lint` job to `ci.yml`:
+
+```yaml
+lint:
+  runs-on: ubuntu-latest
+  steps:
+    - uses: actions/checkout@v4
+    - uses: astral-sh/setup-uv@v4
+    - run: uv sync --all-extras
+    - run: scripts/lint.sh
+```
+
+#### Recommended CI additions (minimal complexity)
+
+1. **Add lint job** — `scripts/lint.sh` already exists; just call it in CI (5 lines of YAML)
+2. **Add package install check** — `uv pip install . && collection-analysis --help` (verifies entrypoint works)
+3. **Type checking** — future consideration; not urgent at 1063 lines
 
 ---
 
