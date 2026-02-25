@@ -28,6 +28,7 @@ logger = logging.getLogger(__name__)
 
 # PRAGMAs applied before bulk loading — maximize write throughput
 BUILD_PRAGMAS = {
+    "page_size": 8192,  # must precede any CREATE TABLE; 8KB pages are empirically fastest for row-based tabular data
     "journal_mode": "OFF",  # no rollback journal during build
     "synchronous": "OFF",  # skip fsync (safe because we swap atomically)
     "cache_size": -2_000_000,  # 2GB page cache
@@ -55,9 +56,10 @@ def final_path(output_dir: str, db_name: str = "current_collection.db") -> Path:
 
 
 def open_build_db(output_dir: str, db_name: str = "current_collection.db") -> sqlite3.Connection:
-    """Open (or create) the temp build database and apply fast-write PRAGMAs."""
+    """Open the temp build database (always fresh) and apply fast-write PRAGMAs."""
     path = build_path(output_dir, db_name)
     path.parent.mkdir(parents=True, exist_ok=True)
+    path.unlink(missing_ok=True)  # discard any stale/corrupt file from a previous failed run
     db = sqlite3.connect(path)
     for pragma, value in BUILD_PRAGMAS.items():
         db.execute(f"PRAGMA {pragma} = {value}")
@@ -78,7 +80,7 @@ def load_table(
     db: sqlite3.Connection,
     table_name: str,
     rows,
-    batch_size: int = 1000,
+    batch_size: int = 5000,
 ) -> int:
     """Insert an iterable of row dicts into *table_name*, creating it if needed.
 
@@ -101,6 +103,7 @@ def load_table(
             f'INSERT INTO "{table_name}" ({col_names}) VALUES ({placeholders})',
             batch,
         )
+        db.commit()
 
     def _serialize(v):
         if isinstance(v, (dict, list)):

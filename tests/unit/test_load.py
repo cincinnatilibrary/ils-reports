@@ -43,6 +43,12 @@ class TestOpenBuildDb:
         assert result.lower() == "off"
         db.close()
 
+    def test_build_pragma_page_size(self, tmp_output_dir):
+        db = load.open_build_db(tmp_output_dir)
+        result = db.execute("PRAGMA page_size").fetchone()[0]
+        assert result == 8192
+        db.close()
+
 
 class TestFinalizeDb:
     def test_finalize_db_sets_wal(self, tmp_output_dir):
@@ -139,3 +145,8 @@ class TestLoadTable:
         result = db.execute("SELECT COUNT(*) FROM nums").fetchone()[0]
         assert result == 250
         db.close()
+
+    def test_load_table_default_batch_size(self):
+        import inspect
+        sig = inspect.signature(load.load_table)
+        assert sig.parameters["batch_size"].default == 5000

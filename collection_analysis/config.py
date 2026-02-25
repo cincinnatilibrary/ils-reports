@@ -8,11 +8,11 @@ Environment variables (primary, preferred):
     PG_USERNAME    PostgreSQL username               (required)
     PG_PASSWORD    PostgreSQL password               (required)
     OUTPUT_DIR     Directory for output databases    (required)
-    PG_SSLMODE     SSL mode (default 'require')      (optional)
-    PG_ITERSIZE    Cursor fetch size (default 5000)  (optional)
-    LOG_LEVEL      DEBUG | INFO | WARNING            (optional, default 'INFO')
-    LOG_FILE       Path to log file; unset disables  (optional)
-
+    PG_SSLMODE                SSL mode (default 'require')           (optional)
+    PG_ITERSIZE               Cursor fetch size (default 15000)      (optional)
+    PG_SLEEP_BETWEEN_TABLES   Seconds to pause between tables (default 0.0)  (optional)
+    LOG_LEVEL                 DEBUG | INFO | WARNING                 (optional, default 'INFO')
+    LOG_FILE                  Path to log file; unset disables       (optional)
 For local development, copy .env.sample to .env — it is loaded automatically.
 
 Legacy: config.json is still accepted but deprecated.  A DeprecationWarning is
@@ -36,6 +36,7 @@ _ENV_VARS: list[tuple[str, str]] = [
     ("OUTPUT_DIR", "output_dir"),
     ("PG_SSLMODE", "pg_sslmode"),
     ("PG_ITERSIZE", "pg_itersize"),
+    ("PG_SLEEP_BETWEEN_TABLES", "pg_sleep_between_tables"),
     ("LOG_LEVEL", "log_level"),
     ("LOG_FILE", "log_file"),
 ]
@@ -129,14 +130,23 @@ def load(config_path: str | None = None) -> dict:
         raise ValueError(f"PG_PORT must be an integer, got {cfg['pg_port']!r}") from exc
 
     try:
-        cfg["pg_itersize"] = int(cfg.get("pg_itersize", 5000))
+        cfg["pg_itersize"] = int(cfg.get("pg_itersize", 15000))
     except (ValueError, TypeError) as exc:
         raise ValueError(
             f"PG_ITERSIZE must be an integer, got {cfg.get('pg_itersize')!r}"
         ) from exc
 
+    try:
+        cfg["pg_sleep_between_tables"] = float(cfg.get("pg_sleep_between_tables", 0.0))
+    except (ValueError, TypeError) as exc:
+        raise ValueError(
+            f"PG_SLEEP_BETWEEN_TABLES must be a number, got "
+            f"{cfg.get('pg_sleep_between_tables')!r}"
+        ) from exc
+
     cfg.setdefault("pg_sslmode", "require")
-    cfg.setdefault("pg_itersize", 5000)
+    cfg.setdefault("pg_itersize", 15000)
+    cfg.setdefault("pg_sleep_between_tables", 0.0)
     cfg.setdefault("log_level", "INFO")
     cfg.setdefault("log_file", None)
 

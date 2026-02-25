@@ -111,6 +111,7 @@ def main():
     try:
         db = load.open_build_db(cfg["output_dir"])
         itersize = cfg["pg_itersize"]
+        sleep_between = cfg.get("pg_sleep_between_tables", 0.0)
 
         engine = create_engine(cfg_module.pg_connection_string(cfg))
         with engine.connect() as pg:
@@ -169,6 +170,9 @@ def main():
                         "rows_per_sec": round(n / elapsed, 1) if elapsed > 0 else None,
                     }
                 )
+                if sleep_between > 0:
+                    logger.debug("  sleeping %.1fs (PG_SLEEP_BETWEEN_TABLES) ...", sleep_between)
+                    time.sleep(sleep_between)
 
         t0 = time.perf_counter()
         logger.info("Creating views ...")

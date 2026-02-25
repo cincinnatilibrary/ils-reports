@@ -34,7 +34,7 @@ class TestLoadValidConfig:
     def test_load_defaults_applied(self, valid_config):
         result = config.load()
         assert result["pg_sslmode"] == "require"
-        assert result["pg_itersize"] == 5000
+        assert result["pg_itersize"] == 15000
 
     def test_load_defaults_not_clobbered(self, valid_config, monkeypatch):
         monkeypatch.setenv("PG_SSLMODE", "prefer")
@@ -129,6 +129,28 @@ class TestDeprecationWarnings:
         with warnings.catch_warnings():
             warnings.simplefilter("error", DeprecationWarning)
             config.load()  # must not raise
+
+
+class TestSleepBetweenTables:
+    def test_default_is_zero(self, valid_config):
+        result = config.load()
+        assert result["pg_sleep_between_tables"] == 0.0
+
+    def test_float_value(self, valid_config, monkeypatch):
+        monkeypatch.setenv("PG_SLEEP_BETWEEN_TABLES", "1.5")
+        result = config.load()
+        assert result["pg_sleep_between_tables"] == 1.5
+
+    def test_integer_string_coerced_to_float(self, valid_config, monkeypatch):
+        monkeypatch.setenv("PG_SLEEP_BETWEEN_TABLES", "2")
+        result = config.load()
+        assert result["pg_sleep_between_tables"] == 2.0
+        assert isinstance(result["pg_sleep_between_tables"], float)
+
+    def test_invalid_value_raises(self, valid_config, monkeypatch):
+        monkeypatch.setenv("PG_SLEEP_BETWEEN_TABLES", "not_a_number")
+        with pytest.raises(ValueError, match="PG_SLEEP_BETWEEN_TABLES"):
+            config.load()
 
 
 class TestPgConnectionString:
