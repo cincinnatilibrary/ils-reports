@@ -1,0 +1,6 @@
+[sqlfluff]
+dialect = postgres
+templater = placeholder
+
+[sqlfluff:templater:placeholder]
+param_style = colon

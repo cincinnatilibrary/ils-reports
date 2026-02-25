@@ -3,6 +3,46 @@
 from unittest.mock import MagicMock
 
 from collection_analysis import extract
+from collection_analysis.extract import _load_sql
+
+_ALL_QUERY_NAMES = [
+    "record_metadata",
+    "bib",
+    "item",
+    "bib_record",
+    "volume_record",
+    "item_message",
+    "language_property",
+    "bib_record_item_record_link",
+    "volume_record_item_record_link",
+    "location",
+    "location_name",
+    "branch_name",
+    "branch",
+    "country_property_myuser",
+    "item_status_property",
+    "itype_property",
+    "bib_level_property",
+    "material_property",
+    "hold",
+    "circ_agg",
+    "circ_leased_items",
+]
+
+
+class TestLoadSql:
+    def test_returns_nonempty_string(self):
+        assert len(_load_sql("record_metadata")) > 0
+
+    def test_all_sql_files_loadable(self):
+        for name in _ALL_QUERY_NAMES:
+            sql = _load_sql(name)
+            assert len(sql) > 0, f"Empty SQL file: {name}.sql"
+
+    def test_item_message_regex_fix(self):
+        sql = _load_sql("item_message")
+        assert "(?:AM|PM)" not in sql, "Old SQLAlchemy-breaking pattern still present"
+        assert "[AP]M" in sql, "Fixed character-class pattern missing"
 
 
 def _make_mock_conn(rows_per_call):
