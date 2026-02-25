@@ -14,7 +14,7 @@ tags: [assessment, review, quality]
 |--------|-------------|--------|------|
 | 0 | Housekeeping | Complete | 2026-02-25 |
 | 1 | Inventory & Deep Code Review | Complete | 2026-02-25 |
-| 2 | Run & Verify | Pending | — |
+| 2 | Run & Verify | Complete | 2026-02-25 |
 | 3 | Rubric Assessment A–D | Pending | — |
 | 4 | Rubric Assessment E–I | Pending | — |
 | 5 | Synthesis & Final Report | Pending | — |
@@ -349,7 +349,126 @@ Key observations:
 
 ## Sprint 2: Run & Verify
 
-*(pending)*
+### 2.1 Test Results
+
+**Command:** `scripts/test.sh --cov` on Python 3.14.1
+
+- **Result:** 146/146 passed in 0.57s
+- **Coverage:** 88.36% (threshold: 85%)
+- **Warnings:** None from tests themselves
+
+Coverage per module:
+
+| Module | Stmts | Miss | Cover | Uncovered Lines |
+| --- | --- | --- | --- | --- |
+| `config.py` | 62 | 2 | 97% | 136-137 (itersize ValueError branch) |
+| `extract.py` | 183 | 0 | 100% | — |
+| `load.py` | 64 | 0 | 100% | — |
+| `run.py` | 87 | 49 | 44% | 91-238 (`main()` entirely uncovered) |
+| `telemetry.py` | 21 | 0 | 100% | — |
+| `transform.py` | 21 | 0 | 100% | — |
+
+Key observation: `run.py:main()` (the actual pipeline entry point) has 0% unit test coverage. The 88% total is achieved because helper functions (`_timed_load`, `_configure_logging`, etc.) are tested individually, but the orchestration logic is only exercised in integration tests that never run in CI.
+
+### 2.2 Lint Results
+
+**Command:** `scripts/lint.sh`
+
+- **Result:** FAILED — 3 ruff findings (all in test files)
+
+| Rule | File | Issue |
+| --- | --- | --- |
+| SIM117 | `tests/unit/test_run.py:110` | Nested `with` statements should be combined |
+| SIM105 | `tests/unit/test_transform.py:46` | `try/except/pass` should use `contextlib.suppress` |
+| SIM105 | `tests/unit/test_transform.py:93` | `try/except/pass` should use `contextlib.suppress` |
+
+These are style findings, not correctness bugs. Production code passes cleanly.
+
+### 2.3 Existing Build Database Inspection
+
+A `current_collection.db` exists at `out/current_collection.db` (1.4 MB) from a sample build with `EXTRACT_LIMIT=500`.
+
+**Tables:** 21 base tables + `sqlite_stat1` (from ANALYZE)
+**Views:** 26 views (all created successfully)
+**Indexes:** 42 (40 application indexes + 2 SQLite internal)
+**`PRAGMA integrity_check`:** `ok`
+
+Row counts from the sample build (EXTRACT_LIMIT=500):
+
+| Table | Rows | Notes |
+| --- | --- | --- |
+| `bib` | 500 | Capped |
+| `item` | 500 | Capped |
+| `record_metadata` | 500 | Capped |
+| `circ_agg` | 500 | Capped |
+| `hold` | 500 | Capped |
+| `location` | 500 | Capped — should be ~200 (full lookup) |
+| `location_name` | 500 | Capped — same issue |
+| `language_property` | 485 | Under 500; full lookup data |
+| `country_property_myuser` | 333 | Under 500; full lookup data |
+| `itype_property` | 116 | Full lookup data |
+| `branch` / `branch_name` | 52 each | Full lookup data |
+| `item_status_property` | 30 | Full lookup data |
+| `material_property` | 29 | Full lookup data |
+| `bib_level_property` | 8 | Full lookup data |
+
+Note: `EXTRACT_LIMIT` applies uniformly to all tables including small lookup tables. This means `location` (normally ~200 rows) and `location_name` are capped at 500 — which happened to be above their actual size, so they got full data. But if the limit were set to 50, lookup tables would be incomplete, breaking views that depend on them.
+
+### 2.4 Telemetry Data (pipeline_runs.db)
+
+8 runs recorded. History:
+
+| Run | Duration | Result | Notes |
+| --- | --- | --- | --- |
+| 1 | 0.0 min | failed | Initial setup issues |
+| 2 | — | failed | No completion timestamp |
+| 3 | 84.0 min | failed | Long run, eventually failed |
+| 4 | 0.0 min | failed | Quick failure |
+| 5 | 93.1 min | failed | Long run, eventually failed |
+| 6 | 0.3 min | failed | Quick failure |
+| 7 | 2.3 min | success | First successful sample build |
+| 8 | 1.6 min | success | Most recent sample build |
+
+Stage timing from run 8 (most recent success, EXTRACT_LIMIT=500):
+
+| Stage | Rows | Seconds | Rows/sec | Notes |
+| --- | --- | --- | --- | --- |
+| `circ_agg` | 500 | 59.9 | 8 | **Bottleneck** — 62% of total time |
+| `item_message` | 500 | 19.3 | 26 | Second slowest |
+| `item` | 500 | 5.4 | 92 | Complex JOIN chain |
+| `volume_record` | 500 | 3.4 | 146 | |
+| `bib` | 500 | 2.3 | 214 | |
+| Other 16 stages | varies | <2.0 each | — | Fast |
+| **Total** | | **97.0** | | |
+
+`circ_agg` at 8 rows/sec is a known bottleneck (documented in llore/002). The query is non-paginated and uses a cross join with date subquery over `circ_trans`.
+
+### 2.5 Pipeline Log Analysis
+
+`pipeline.log` exists at project root (11,758 lines, 1.3 MB). Contains output from all 8 runs including failures. The log shows:
+
+- Run failures were due to connection/config issues during initial setup, not pipeline logic bugs
+- Successful runs complete with clean stage-by-stage timing output
+- No ERROR-level entries in the successful runs
+- INFO-level pagination progress messages work correctly (`record_metadata: 500 rows (cursor at id ...)`)
+
+### 2.6 Stale Artifacts
+
+| Artifact | Location | Issue |
+| --- | --- | --- |
+| `test.db` | Project root | Contains 4 tables (bib, item, hold, bib_record_item_record_link). Appears to be from manual testing. Not in `.gitignore`. |
+| `pipeline.log` | Project root | 1.3 MB log from 8 runs. Not in `.gitignore`. |
+| `current_collection.db.new-shm` | `out/` | **Orphaned WAL sidecar** from finalize step (see below) |
+| `current_collection.db.new-wal` | `out/` | **Orphaned WAL sidecar** from finalize step (see below) |
+| `coverage-badge.svg` | Project root | Regenerated on each `--cov` run |
+
+**Orphaned WAL sidecar bug:** `finalize_db()` switches the `.db.new` file to WAL mode, which creates `.db.new-shm` and `.db.new-wal` sidecar files. Then `swap_db()` does `os.replace(.db.new → .db)`, but only renames the main file — the `-shm` and `-wal` files remain with the `.db.new` prefix, orphaned on disk. This is a real (minor) bug: stale sidecar files accumulate, and the live `.db` starts in WAL mode without its checkpoint files.
+
+### 2.7 What Could Not Be Validated
+
+- **Full production build:** No access to Sierra PostgreSQL credentials from this environment. The sample build used `EXTRACT_LIMIT=500`.
+- **Integration tests:** Require `pytest-postgresql` with a running PostgreSQL; not executed in this review.
+- **Datasette serving:** Did not start a Datasette instance to verify view rendering.
 
 ---
 
